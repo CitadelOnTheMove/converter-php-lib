@@ -31,8 +31,8 @@ echo $base_url;
 			
 			<?php
 			$source = strip_tags($_REQUEST['source']);
-			$filename = urlencode(strip_tags($_REQUEST['filename']));
-			$template = urlencode(strip_tags($_REQUEST['template']));
+			$filename = strip_tags($_REQUEST['filename']);
+			$template = strip_tags($_REQUEST['template']);
 			if (!empty($source)) {
 				$download_url = 'convert.php?source=' . urlencode($source) . '&filename=' . urlencode($filename) . '&template=' . urlencode($template);
 				?>
@@ -44,13 +44,13 @@ echo $base_url;
 			// Set default if no value specified
 			if (empty($source)) { $source = 'samples/dataset.csv'; }
 			if (empty($filename)) { $filename = ''; }
-			if (empty($template)) { $template = ''; }
+			if (empty($template)) { $template = 'samples/template.php'; }
 			?>
 			
 			<form method="POST">
 				<p><label>Source file (local file or URL) : <input type="text" name="source" value="<?php echo $source; ?>" /></label></p>
+				<p><label>Template file : <input type="text" name="template" value="<?php echo $template; ?>" /></label></p>
 				<p><label>Exported file name (optional, no file extension) : <input type="text" name="filename" value="<?php echo $filename; ?>" /></label></p>
-				<p><label>Template file (not functionnal yet) : <input type="text" name="template" value="<?php echo $template; ?>" /></label></p>
 				<p><input type="submit" value="Give me the link to the converted file !" /></p>
 			</form>
 		</div>

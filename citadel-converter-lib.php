@@ -154,6 +154,8 @@ function getJSON($dataset, $template) {
 
 		$json->dataset->poi[] = $poiObj;
 	}
+	
+	// Handle older versions of JSON encoding functions
 	if (version_compare(phpversion(), '5.4', '<')) {
 		// PHP < 5.4 doesn't excape unicode (you end up with \u00 characters)
 		// So we need to convert it before returning the content
@@ -170,8 +172,9 @@ function getJSON($dataset, $template) {
 			},
 			$json
 		);
+	} else {
+		return json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 	}
-	return json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 }
 
 
@@ -190,12 +193,16 @@ function getValue($poiArray, $key) {
 		// Find CSV name from semantic JSON name mapping
 		$map_key = $template['mapping'][$key];
 		// Find array index from CSV name mapping
-		$array_key = $array_mapping[$map_key];
-		
+		if (array_key_exists($map_key, $array_mapping)) $array_key = $array_mapping[$map_key];
+		else error_log("DEBUG : missing key : key=$key => map_key=$map_key does not exist in array_mapping");
 		//echo "$key => $map_key => $array_key = {$poiArray[$array_key]}<br />";
 		//echo print_r($poiArray, true) . '<hr />';
 		// Return the extracted value
-		return $poiArray[$array_key];
+		if (!empty($array_key)) return $poiArray[$array_key];
+		else {
+			error_log("DEBUG : empty array_key for key=$key, map_key=$map_key");
+			return null;
+		}
 	}
 	return null;
 }
@@ -228,40 +235,8 @@ function setArrayMapping($labels) {
 }
 
 
-
-
-function getEncoding($str) {
-	$enc_order = array('ASCII', 'JIS', 'UTF-8', 'ISO-8859-1', 'WINDOWS-1521');
-	//$enc_order = array('UTF-8', 'ASCII', 'ISO-8859-1', 'ISO-8859-2', 'ISO-8859-3', 'ISO-8859-4', 'ISO-8859-5', 'ISO-8859-6', 'ISO-8859-7', 'ISO-8859-8', 'ISO-8859-9', 'ISO-8859-10', 'ISO-8859-13', 'ISO-8859-14', 'ISO-8859-15', 'ISO-8859-16', 'Windows-1251', 'Windows-1252', 'Windows-1254');
-	$enc_order = implode(', ', $enc_order);
-	return mb_detect_encoding($str, $enc_order);
-}
-
-function toUTF8($str) {
-	$encoding = getEncoding($str);
-	if ($encoding == 'UTF-8') {
-		return Encoding::toUTF8($str);
-	} else {
-		return Encoding::fixUTF8($str);
-	}
-	//echo '<br />' . $encoding;
-	//return mb_convert_encoding($str, $encoding, 'UTF-8');
-	if ($encoding != 'UTF-8') {
-		return utf8_encode($str);
-		// $str = iconv($encoding /**/== 'ISO-8859-1' ? 'CP850' : $encoding/**/, "UTF-8", $str);
-		return iconv($encoding, "UTF-8", $str);
-		/* italian if comment, decomment good french
-		if ($encoding == 'ISO-8859-1') {
-			return iconv('CP850', "UTF-8", $str);
-		} else {
-			return iconv($encoding, "UTF-8", $str);
-		}
-		*/
-	}
-	//echo "=>NOCONV | $str<br />";
-	return $str;
-}
-
+// Get the dataset as an array : one array entry per "row" or POI
+// The first row should be the dataset column labels (for easier mapping)
 function getDataset($dataset, $delimiter = ';', $enclosure = '"', $escape = '\\') {
 	$result = array();
 	$content = file($dataset);
@@ -271,6 +246,25 @@ function getDataset($dataset, $delimiter = ';', $enclosure = '"', $escape = '\\'
 		}
 		return $result;
 	} else return false;
+}
+
+
+// Converts anything to UTF-8
+function toUTF8($str) {
+	$encoding = getEncoding($str);
+	if ($encoding == 'UTF-8') {
+		return Encoding::toUTF8($str);
+	} else {
+		return Encoding::fixUTF8($str);
+	}
+}
+
+// Gets the current encoding
+function getEncoding($str) {
+	$enc_order = array('ASCII', 'JIS', 'UTF-8', 'ISO-8859-1', 'WINDOWS-1521');
+	//$enc_order = array('UTF-8', 'ASCII', 'ISO-8859-1', 'ISO-8859-2', 'ISO-8859-3', 'ISO-8859-4', 'ISO-8859-5', 'ISO-8859-6', 'ISO-8859-7', 'ISO-8859-8', 'ISO-8859-9', 'ISO-8859-10', 'ISO-8859-13', 'ISO-8859-14', 'ISO-8859-15', 'ISO-8859-16', 'Windows-1251', 'Windows-1252', 'Windows-1254');
+	$enc_order = implode(', ', $enc_order);
+	return mb_detect_encoding($str, $enc_order);
 }
 
 

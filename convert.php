@@ -14,7 +14,7 @@ global $template;
 // @TODO : allow fetching serialized array structure from remote source
 $remote_template = $_REQUEST['template'];
 if (!empty($remote_template)) {
-	$remote_template = file_gets_contents($remote_template);
+	$remote_template = file_get_contents($remote_template);
 	$remote_template = unserialize($remote_template);
 	$template = $remote_template;
 } else {
