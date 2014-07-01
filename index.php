@@ -2,9 +2,7 @@
 include_once "citadel-converter-lib.php";
 $base_url = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['SERVER_NAME'] . dirname($_SERVER['PHP_SELF']) . '/';
 
-echo $base_url;
 ?>
-
 <!DOCTYPE html>
 <html>
 	<head>
@@ -30,9 +28,9 @@ echo $base_url;
 			</ul>
 			
 			<?php
-			$source = strip_tags($_REQUEST['source']);
-			$filename = strip_tags($_REQUEST['filename']);
-			$template = strip_tags($_REQUEST['template']);
+			$source = @strip_tags($_REQUEST['source']);
+			$filename = @strip_tags($_REQUEST['filename']);
+			$template = @strip_tags($_REQUEST['template']);
 			if (!empty($source)) {
 				$download_url = 'convert.php?source=' . urlencode($source) . '&filename=' . urlencode($filename) . '&template=' . urlencode($template);
 				?>
@@ -44,7 +42,7 @@ echo $base_url;
 			// Set default if no value specified
 			if (empty($source)) { $source = 'samples/dataset.csv'; }
 			if (empty($filename)) { $filename = ''; }
-			if (empty($template)) { $template = 'samples/template.php'; }
+			if (empty($template)) { $template = 'samples/template.txt'; }
 			?>
 			
 			<form method="POST">

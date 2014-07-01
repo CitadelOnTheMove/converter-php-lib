@@ -3,7 +3,7 @@ session_start();
 $version = "0.1";
 
 // Fix UTF-8 encoding
-include_once('vendors/forceutf8/src/ForceUTF8/Encoding.php');
+require_once('vendors/ForceUTF8/Encoding.php');
 use \ForceUTF8\Encoding;
 
 /* Converter lib should :
@@ -14,9 +14,12 @@ use \ForceUTF8\Encoding;
  */
 
 
-
-$lang = strip_tags($_REQUEST['lang']);
+// Set converter language
+$lang = @strip_tags($_REQUEST['lang']);
+if (empty($lang)) $lang = 'en';
+global $CONFIG;
 if (!include_once("languages/$lang.php")) { include_once("languages/en.php"); }
+$CONFIG['language'] = $language;
 
 /*
 		$filename = $_SESSION['dataset-id'];
@@ -66,6 +69,8 @@ function getJSON($dataset, $template) {
 	// Build the JSON
 	$json = new stdClass();
 	$json->dataset = new stdClass();
+	
+	// Metadata fields
 	$json->dataset->id = $template['metadata']['dataset-id'];
 	$json->dataset->updated = $now->format('c');
 	$json->dataset->created = $now->format('c');
@@ -84,13 +89,22 @@ function getJSON($dataset, $template) {
 	$defaultCategories = $template['mapping']['dataset-poi-category-default'];
 	
 	$json->dataset->poi = array();
+	
+	// Data content
 	// @TODO : replace by a foreach loop
-	for ($i = $skipFirstRow ? 1 : 0; $i < count($dataset); $i++) {
-		$poiArray = $dataset[$i];
+	//for ($i = $skipFirstRow ? 1 : 0; $i < count($dataset); $i++) {
+	//	$poiArray = $dataset[$i];
+	//}
+	$i = 0;
+	foreach ($dataset as $poiArray) {
+		$i++;
+		// Skip first row if set as headers row
+		if (($i == 1) && $skipFirstRow) continue;
 		$poiObj = new StdClass();
 		$poiObj->id = getValue($poiArray, 'dataset-poi-id');
 		// Set incremental id if no defined id in the dataset (required by apps)
-		if (empty($poiObj->id)) { $poiObj->id = $i + 1; }
+		//if (empty($poiObj->id)) { $poiObj->id = $i + 1; }
+		if (empty($poiObj->id)) { $poiObj->id = $i; }
 		$poiObj->title = getValue($poiArray, 'dataset-poi-title');
 		$poiObj->description = getValue($poiArray, 'dataset-poi-description');
 		if ($poiObj->description == null) {
@@ -219,6 +233,7 @@ function getDataset($dataset, $delimiter = ';', $enclosure = '"', $escape = '\\'
 
 // Converts anything to UTF-8
 function toUTF8($str) {
+	// Make the conversion
 	$encoding = getEncoding($str);
 	if ($encoding == 'UTF-8') {
 		return Encoding::toUTF8($str);

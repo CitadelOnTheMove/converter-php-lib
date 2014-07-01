@@ -7,6 +7,7 @@
  * Copy it and adjust it to the needs of your datasets
  */
 
+
 $template = array(
 	// Set to true if the first line of data contains the lables (titles of columns)
 	// Set to false if the data starts immediately
