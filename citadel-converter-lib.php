@@ -3,7 +3,7 @@ session_start();
 $version = "0.1";
 
 // Fix UTF-8 encoding
-require_once('vendors/forceutf8/src/ForceUTF8/Encoding.php');
+include_once('vendors/forceutf8/src/ForceUTF8/Encoding.php');
 use \ForceUTF8\Encoding;
 
 /* Converter lib should :
@@ -13,42 +13,10 @@ use \ForceUTF8\Encoding;
  * cache it until original CSV has changed and/or using validity metadata
  */
 
-$en_strings = array(
-	'error:nofileselected' => "No file selected",
-	'error:nofileuploaded' => "No file uploaded",
-	'error:upload' => "Error uploading dataset. Please try again.",
-	'error:upload:system' => "System error uploading dataset.",
-	'error:toobig' => "Dataset cannot be uploaded because it's too big.",
-	'error:nodataset' => "No Dataset settings selected",
-	'error:missingconversionsettings' => "No Conversion settings selected",
-	'error:nofilefound' => "We've got a problem : no file found !",
-);
 
-
-$fr_strings = array(
-	'error:nofileselected' => "Aucun fichier sélectionné",
-	'error:nofileuploaded' => "Aucun fichier chargé",
-	'error:upload' => "Erreur lors de l'envoi du fichier. Veuillez réessayer.",
-	'error:upload:system' => "Erreur système lors de l'envoi du jeu de données.",
-	'error:toobig' => "Le jeu de données n'a pas pu être chargé car il est trop gros.",
-	'error:nodataset' => "Aucun jeu de données sélectionné",
-	'error:missingconversionsettings' => "Aucun réglage de conversion sélectionné",
-	'error:nofilefound' => "Oups, ça ne marche pas : aucun fichier trouvé !",
-);
 
 $lang = strip_tags($_REQUEST['lang']);
-switch($lang) {
-	/*
-	case 'it':
-		$language = $it_strings;
-		break;
-	*/
-	case 'fr':
-		$language = $fr_strings;
-		break;
-	default:
-		$language = $en_strings;
-}
+if (!include_once("languages/$lang.php")) { include_once("languages/en.php"); }
 
 /*
 		$filename = $_SESSION['dataset-id'];
