@@ -11,7 +11,9 @@ $base_url = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['S
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<meta name="description" content="">
 		<meta name="author" content="">
-
+		
+		<link rel="stylesheet" href="main.css" />
+		
 		<title>Citadel - Converter <?php echo $version; ?></title>
 		
 		<!-- Custom styles -->
