@@ -46,7 +46,7 @@ $base_url = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['S
 			// Set default if no value specified
 			if (empty($source)) { $source = 'samples/dataset.csv'; }
 			if (empty($filename)) { $filename = ''; }
-			if (empty($remote_template)) { $remote_template = 'samples/template.txt'; }
+			if (empty($remote_template) && empty($serialized_template)) { $remote_template = 'samples/template.txt'; }
 			?>
 			
 			<form method="POST">
