@@ -52,11 +52,15 @@ $base_url = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['S
 			<form method="POST">
 				<fieldset>
 					<legend><?php echo echo_lang('converter:form'); ?></legend>
-				<p><label><?php echo echo_lang('converter:form:source'); ?><input type="text" name="source" value="<?php echo $source; ?>" /></label></p>
-				<p><label><?php echo echo_lang('converter:form:template'); ?><input type="text" name="remote_template" value="<?php echo $remote_template; ?>" /></label></p>
-				<p><label><?php echo echo_lang('converter:form:serialized_template'); ?><textarea type="text" name="serialized_template"><?php echo $serialized_template; ?></textarea></label></p>
-				<p><label><?php echo echo_lang('converter:form:filename'); ?><input type="text" name="filename" value="<?php echo $filename; ?>" /></label></p>
-				<p><input type="submit" value="<?php echo echo_lang('converter:form:givelink'); ?>" /></p>
+					<div style="width:45%; float:left;">
+						<p><label><?php echo echo_lang('converter:form:source'); ?><input type="text" name="source" value="<?php echo $source; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:form:filename'); ?><input type="text" name="filename" value="<?php echo $filename; ?>" /></label></p>
+					</div>
+					<div style="width:45%; float:right;">
+						<p><label><?php echo echo_lang('converter:form:template'); ?><input type="text" name="remote_template" value="<?php echo $remote_template; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:form:serialized_template'); ?><textarea type="text" name="serialized_template" style="width:90%; height:5ex;"><?php echo $serialized_template; ?></textarea></label></p>
+					</div>
+					<p style="clear:both;"><input type="submit" value="<?php echo echo_lang('converter:form:givelink'); ?>" /></p>
 				</fieldset>
 			</form>
 		</div>
