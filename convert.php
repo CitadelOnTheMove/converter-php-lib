@@ -2,17 +2,17 @@
 include_once "citadel-converter-lib.php";
 
 // Source file : any local or remote file
-$source = $_REQUEST['source'];
+$source = get_input('source');
 if (empty($source)) $source = 'samples/dataset.csv';
 
 // Export filename - we could use some templating such as DATE to add a date...
-$filename = strip_tags($_REQUEST['filename']);
+$filename = get_input('filename');
 if (empty($filename)) { $filename = 'export_' . date('YmdHis'); }
 
 // Mapping template : any local or remote template config
 global $template;
-// @TODO : allow fetching serialized array structure from remote source
-$remote_template = $_REQUEST['template'];
+// Allow to fetch a serialized array structure from remote source
+$remote_template = get_input('template');
 if (!empty($remote_template)) {
 	$remote_template = file_get_contents($remote_template);
 	$remote_template = unserialize($remote_template);

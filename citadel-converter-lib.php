@@ -252,17 +252,25 @@ function getEncoding($str) {
 
 // Get and clean the requests
 function get_input($variable, $default = '', $filter= true) {
-	if (!isset($_REQUEST[$variable])) return false;
+	if (!isset($_REQUEST[$variable])) return $default;
 	if (is_array($_REQUEST[$variable])) {
 		$result = $_REQUEST[$variable];
 	} else {
 		$result = trim($_REQUEST[$variable]);
 	}
-	if ($filter_result) {
+	if ($filter) {
 		if (is_array($result)) $result = array_map('strip_tags', $result);
 		else $result = strip_tags($result);
 	}
 	return $result;
 }
+
+// Return translation from a key
+// @TODO Add sprintf params and logic
+function echo_lang($key, $params = array()) {
+	global $CONFIG;
+	return $CONFIG['language'][$key];
+}
+
 
 

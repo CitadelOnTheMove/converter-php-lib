@@ -22,22 +22,20 @@ $base_url = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['S
 
 	<body>
 		<div class="container">
-			<p>This PHP lib is meant to be used as a service that can convert CSV files to Citadel-JSON files on the fly</p>
-			<p>Following API should be exposed :</p>
-			<ul>
-				<li>convert : can be used to convert CSV files to Citadel-JSON</li>
-				<li>build-template : can be used to generate a new conversion template</li>
-			</ul>
+			<h1><?php echo echo_lang('converter:title'); ?></h1>
+			<?php echo echo_lang('converter:description'); ?>
 			
 			<?php
-			$source = @strip_tags($_REQUEST['source']);
-			$filename = @strip_tags($_REQUEST['filename']);
-			$template = @strip_tags($_REQUEST['template']);
+			$source = get_input('source');
+			$filename = get_input('filename');
+			$template = get_input('template');
 			if (!empty($source)) {
-				$download_url = 'convert.php?source=' . urlencode($source) . '&filename=' . urlencode($filename) . '&template=' . urlencode($template);
+				$download_url = $base_url . 'convert.php?source=' . urlencode($source) . '&filename=' . urlencode($filename) . '&template=' . urlencode($template);
 				?>
-				<p><a href="<?php echo $base_url . $download_url; ?>">Download generated Citadel-JSON file</a></p>
-				<p>OR use this direct URL to provide updated file to your app : <?php echo $download_url; ?></p>
+				<blockquote>
+					<p><a href="<?php echo $base_url . $download_url; ?>"><?php echo $CONFIG['language']['converter:download:file']; ?></a></p>
+					<p><?php echo echo_lang('converter:download:link'); ?><br /><q><?php echo $download_url; ?></q></p>
+				</blockquote><br />
 				<?php
 			}
 			
@@ -48,11 +46,15 @@ $base_url = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['S
 			?>
 			
 			<form method="POST">
-				<p><label>Source file (local file or URL) : <input type="text" name="source" value="<?php echo $source; ?>" /></label></p>
-				<p><label>Template file : <input type="text" name="template" value="<?php echo $template; ?>" /></label></p>
-				<p><label>Exported file name (optional, no file extension) : <input type="text" name="filename" value="<?php echo $filename; ?>" /></label></p>
-				<p><input type="submit" value="Give me the link to the converted file !" /></p>
+				<fieldset>
+					<legend><?php echo echo_lang('converter:form'); ?></legend>
+				<p><label><?php echo echo_lang('converter:form:source'); ?><input type="text" name="source" value="<?php echo $source; ?>" /></label></p>
+				<p><label><?php echo echo_lang('converter:form:template'); ?><input type="text" name="template" value="<?php echo $template; ?>" /></label></p>
+				<p><label><?php echo echo_lang('converter:form:filename'); ?><input type="text" name="filename" value="<?php echo $filename; ?>" /></label></p>
+				<p><input type="submit" value="<?php echo echo_lang('converter:form:givelink'); ?>" /></p>
+				</fieldset>
 			</form>
 		</div>
 	</body>
 </html>
+
