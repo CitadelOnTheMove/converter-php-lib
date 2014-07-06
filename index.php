@@ -37,7 +37,7 @@ $base_url = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['S
 				$download_url = $base_url . 'convert.php?source=' . urlencode($source) . '&filename=' . urlencode($filename) . '&remote_template=' . urlencode($remote_template) . '&serialized_template=' . urlencode($serialized_template);
 				?>
 				<blockquote>
-					<p><a href="<?php echo $base_url . $download_url; ?>"><?php echo $CONFIG['language']['converter:download:file']; ?></a></p>
+					<p><a href="<?php echo $download_url; ?>"><?php echo $CONFIG['language']['converter:download:file']; ?></a></p>
 					<p><?php echo echo_lang('converter:download:link'); ?><br /><pre><?php echo $download_url; ?></pre></p>
 				</blockquote><br />
 				<?php
