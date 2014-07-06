@@ -3,7 +3,7 @@ session_start();
 $version = "0.1";
 
 // Fix UTF-8 encoding
-require_once('vendors/forceutf8/src/ForceUTF8/Encoding.php');
+require_once('vendors/ForceUTF8/Encoding.php');
 use \ForceUTF8\Encoding;
 
 /* Converter lib should :
@@ -13,41 +13,22 @@ use \ForceUTF8\Encoding;
  * cache it until original CSV has changed and/or using validity metadata
  */
 
-$en_strings = array(
-	'error:nofileselected' => "No file selected",
-	'error:nofileuploaded' => "No file uploaded",
-	'error:upload' => "Error uploading dataset. Please try again.",
-	'error:upload:system' => "System error uploading dataset.",
-	'error:toobig' => "Dataset cannot be uploaded because it's too big.",
-	'error:nodataset' => "No Dataset settings selected",
-	'error:missingconversionsettings' => "No Conversion settings selected",
-	'error:nofilefound' => "We've got a problem : no file found !",
-);
+
+// Set converter language
+$lang = @strip_tags($_REQUEST['lang']);
+if (empty($lang)) $lang = 'en';
+global $CONFIG;
+if (!include_once("languages/$lang.php")) { include_once("languages/en.php"); }
+$CONFIG['language'] = $language;
 
 
-$fr_strings = array(
-	'error:nofileselected' => "Aucun fichier sélectionné",
-	'error:nofileuploaded' => "Aucun fichier chargé",
-	'error:upload' => "Erreur lors de l'envoi du fichier. Veuillez réessayer.",
-	'error:upload:system' => "Erreur système lors de l'envoi du jeu de données.",
-	'error:toobig' => "Le jeu de données n'a pas pu être chargé car il est trop gros.",
-	'error:nodataset' => "Aucun jeu de données sélectionné",
-	'error:missingconversionsettings' => "Aucun réglage de conversion sélectionné",
-	'error:nofilefound' => "Oups, ça ne marche pas : aucun fichier trouvé !",
-);
-
-$lang = strip_tags($_REQUEST['lang']);
-switch($lang) {
-	/*
-	case 'it':
-		$language = $it_strings;
-		break;
-	*/
-	case 'fr':
-		$language = $fr_strings;
-		break;
-	default:
-		$language = $en_strings;
+function add_lang_switch($lang = 'en', $lang_list = array('en', 'fr')) {
+	$return = '';
+	foreach ($lang_list as $l) {
+		if ($l == $lang) { $return .= '<strong><a href="?lang=' . $l . '">' . strtoupper($l) . '</a></strong> '; } 
+		else { $return .= '<a href="?lang=' . $l . '">' . strtoupper($l) . '</a> '; }
+	}
+	return $return;
 }
 
 /*
@@ -98,6 +79,8 @@ function getJSON($dataset, $template) {
 	// Build the JSON
 	$json = new stdClass();
 	$json->dataset = new stdClass();
+	
+	// Metadata fields
 	$json->dataset->id = $template['metadata']['dataset-id'];
 	$json->dataset->updated = $now->format('c');
 	$json->dataset->created = $now->format('c');
@@ -116,13 +99,22 @@ function getJSON($dataset, $template) {
 	$defaultCategories = $template['mapping']['dataset-poi-category-default'];
 	
 	$json->dataset->poi = array();
+	
+	// Data content
 	// @TODO : replace by a foreach loop
-	for ($i = $skipFirstRow ? 1 : 0; $i < count($dataset); $i++) {
-		$poiArray = $dataset[$i];
+	//for ($i = $skipFirstRow ? 1 : 0; $i < count($dataset); $i++) {
+	//	$poiArray = $dataset[$i];
+	//}
+	$i = 0;
+	foreach ($dataset as $poiArray) {
+		$i++;
+		// Skip first row if set as headers row
+		if (($i == 1) && $skipFirstRow) continue;
 		$poiObj = new StdClass();
 		$poiObj->id = getValue($poiArray, 'dataset-poi-id');
 		// Set incremental id if no defined id in the dataset (required by apps)
-		if (empty($poiObj->id)) { $poiObj->id = $i + 1; }
+		//if (empty($poiObj->id)) { $poiObj->id = $i + 1; }
+		if (empty($poiObj->id)) { $poiObj->id = $i; }
 		$poiObj->title = getValue($poiArray, 'dataset-poi-title');
 		$poiObj->description = getValue($poiArray, 'dataset-poi-description');
 		if ($poiObj->description == null) {
@@ -251,6 +243,7 @@ function getDataset($dataset, $delimiter = ';', $enclosure = '"', $escape = '\\'
 
 // Converts anything to UTF-8
 function toUTF8($str) {
+	// Make the conversion
 	$encoding = getEncoding($str);
 	if ($encoding == 'UTF-8') {
 		return Encoding::toUTF8($str);
@@ -266,5 +259,28 @@ function getEncoding($str) {
 	$enc_order = implode(', ', $enc_order);
 	return mb_detect_encoding($str, $enc_order);
 }
+
+// Get and clean the requests
+function get_input($variable, $default = '', $filter= true) {
+	if (!isset($_REQUEST[$variable])) return $default;
+	if (is_array($_REQUEST[$variable])) {
+		$result = $_REQUEST[$variable];
+	} else {
+		$result = trim($_REQUEST[$variable]);
+	}
+	if ($filter) {
+		if (is_array($result)) $result = array_map('strip_tags', $result);
+		else $result = strip_tags($result);
+	}
+	return $result;
+}
+
+// Return translation from a key
+// @TODO Add sprintf params and logic
+function echo_lang($key, $params = array()) {
+	global $CONFIG;
+	return $CONFIG['language'][$key];
+}
+
 
 

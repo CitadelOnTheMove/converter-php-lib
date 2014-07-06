@@ -25,6 +25,26 @@ Usage
 
 
 
+Developper notes
+================
+
+This converter includes several files, here is a description of the usedfile structure :
+
+### Converter library
+* citadel-converter-lib.php : the main converter library. Contains the functions used to convert a csv file, and map it to the desired JSON file using mapping templates. Can be included into other projects to provide converting capabilities.
+* languages/ : contains the translation strings. Copy and translate into other languages. New languages should be called with a &lang=XX parameter, for a XX.php language file. Use of standard language codes is encouraged.
+* vendors/ : external libraries that are used by the converter.
+
+### Converter implementation
+These files are included to provide a web and webservice interface to the converter library. They can be used as is, or as an example implementation to develop your own converter interface.
+If you want to use it as a base for a new project, embedding the whole folder is advised, as this project should include further improvements. Also contributing your changes to the project is highly appreciated !
+* index.php  : frontend converter interface. Mainly used to provide an URL that is usable with the convert.php backend.
+* convert.php  : backend converter interface - can be used as a webservice by providing the desired information through GET or POST.
+* template-generator.php  : frontend template generator that makes it easier to build the mapping parameters that are used by the convert backend.
+* samples/ : sample files for the converter.
+
+
+
 Roadmap
 =======
 
