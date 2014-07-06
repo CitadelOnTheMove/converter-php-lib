@@ -15,10 +15,11 @@ global $template;
 $remote_template = get_input('remote_template');
 $serialized_template = get_input('serialized_template');
 if (!empty($remote_template)) {
-	$remote_template = file_get_contents($remote_template);
-	$template = unserialize($remote_template);
+	$template = file_get_contents($remote_template);
+	if ($template !== false) $template = unserialize(base64_decode($template));
+	else error_log("Converter : error = could not get template $remote_template");
 } else if (!empty($serialized_template)) {
-	$template = unserialize($serialized_template);
+	$template = unserialize(base64_decode($serialized_template));
 } else {
 	// Let's define the metadata and mapping values
 	$template = array(

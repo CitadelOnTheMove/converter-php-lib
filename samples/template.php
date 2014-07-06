@@ -58,5 +58,5 @@ $template = array(
 );
 
 // Output the template in a form which can be fetched from a remote server
-echo serialize($template);
+echo base64_encode(serialize($template));
 

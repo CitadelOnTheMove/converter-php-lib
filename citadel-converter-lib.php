@@ -179,19 +179,27 @@ function getValue($poiArray, $key) {
 	global $template;
 	// Get the CSV name => array key mapping
 	global $array_mapping;
-	
+	if (empty($template) || empty($array_mapping)) {
+		error_log("ERROR : empty template or array_mapping");
+		return false;
+	}
 	// Return value only if mapping defined
-	if ($template['mapping'][$key] !== "") {
+	if ($template['mapping']["$key"] !== "") {
 		// Find CSV name from semantic JSON name mapping
-		$map_key = $template['mapping'][$key];
+		$map_key = $template['mapping']["$key"];
 		// Find array index from CSV name mapping
-		if (array_key_exists($map_key, $array_mapping)) $array_key = $array_mapping[$map_key];
-		else error_log("DEBUG : missing key : key=$key => map_key=$map_key does not exist in array_mapping");
+		if (isset($array_mapping["$map_key"])) {
+			$array_key = $array_mapping["$map_key"];
+		} else {
+			error_log("DEBUG : missing key : key=$key => map_key=$map_key does not exist in array_mapping");
+		}
 		//echo "$key => $map_key => $array_key = {$poiArray[$array_key]}<br />";
 		//echo print_r($poiArray, true) . '<hr />';
+		//if ($key == "dataset-poi-title") error_log("DEBUG : $key => " . $map_key . " / " . $array_key . " / " . $poiArray["$array_key"]);
 		// Return the extracted value
-		if (!empty($array_key)) return $poiArray[$array_key];
-		else {
+		if ($array_key !== null) {
+			return $poiArray["$array_key"];
+		} else {
 			error_log("DEBUG : empty array_key for key=$key, map_key=$map_key");
 			return null;
 		}
@@ -257,6 +265,7 @@ function getEncoding($str) {
 	$enc_order = array('ASCII', 'JIS', 'UTF-8', 'ISO-8859-1', 'WINDOWS-1521');
 	//$enc_order = array('UTF-8', 'ASCII', 'ISO-8859-1', 'ISO-8859-2', 'ISO-8859-3', 'ISO-8859-4', 'ISO-8859-5', 'ISO-8859-6', 'ISO-8859-7', 'ISO-8859-8', 'ISO-8859-9', 'ISO-8859-10', 'ISO-8859-13', 'ISO-8859-14', 'ISO-8859-15', 'ISO-8859-16', 'Windows-1251', 'Windows-1252', 'Windows-1254');
 	$enc_order = implode(', ', $enc_order);
+	// Note : function accepts array or comma-separated list
 	return mb_detect_encoding($str, $enc_order);
 }
 

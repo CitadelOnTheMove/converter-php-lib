@@ -89,7 +89,7 @@ if (in_array($action, array('generate', 'export'))) {
 		),
 	);
 
-	$serialized_template = serialize($template);
+	$serialized_template = base64_encode(serialize($template));
 	// Output the template in a form which can be fetched from a remote server
 	if ($action == 'export') {
 		echo $serialized_template;
@@ -114,7 +114,7 @@ if (in_array($action, array('generate', 'export'))) {
 		<title>Citadel - Converter <?php echo $version; ?></title>
 		
 		<!-- Custom styles -->
-		<link href="css/style.css" rel="stylesheet">
+		<link href="main.css" rel="stylesheet">
 	</head>
 
 	<body>
