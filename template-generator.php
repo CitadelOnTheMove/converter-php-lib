@@ -39,7 +39,7 @@ $dataset_poi_city = get_input('dataset_poi_city', 'Ville');
 
 
 // Generate a template
-if ($action == "generate") {
+if (in_array($action, array('generate', 'export'))) {
 	$template = array(
 		// Set to true if the first line of data contains the lables (titles of columns)
 		// Set to false if the data starts immediately
@@ -89,12 +89,15 @@ if ($action == "generate") {
 		),
 	);
 
+	$serialized_template = serialize($template);
 	// Output the template in a form which can be fetched from a remote server
-	echo serialize($template);
-	exit;
+	if ($action == 'export') {
+		echo $serialized_template;
+		exit;
+	}
 }
 
-// If no action was asked,display the generation form
+// Display the generation form
 ?>
 
 <!DOCTYPE html>
@@ -116,88 +119,81 @@ if ($action == "generate") {
 
 	<body>
 		<div class="container">
-			<p>This form is meant to facilitate the generation of mapping templates that can be used directly by the converter.</p>
-			<p>A mapping template is basically a serialized PHP array, so it a text string that can be hosted on any web server, or sent in a form.</p>
-			<p>This tool makes it generation easier</p>
+			<span style="float:right; font-family:monospace; font-size:1.2em;">
+				<?php echo add_lang_switch($lang); ?>
+			</span>
+			<h1><?php echo echo_lang('converter:tplgen:title'); ?></h1>
+			<?php echo echo_lang('converter:tplgen:description'); ?>
+			<br />
 			
-<?php
-$skip_first_row = get_input('skip_first_row', 'yes');
-if ($skip_first_row == 'yes') $skip_first_row = true; else $skip_first_row = false;
-$delimiter = get_input('delimiter', ';');
-$enclosure = get_input('enclosure', '"');
-$escape = get_input('escape', '\\');
-$dataset_id = get_input('dataset_id', '');
-$dataset_lang = get_input('dataset_lang', 'fr_FR');
-$dataset_author_id = get_input('dataset_author_id', '');
-$dataset_author_name = get_input('dataset_author_name', '');
-$dataset_license_url = get_input('dataset_license_url', '');
-$dataset_license_term = get_input('dataset_license_term', 'CC-BY');
-$dataset_source_url = get_input('dataset_source_url', '');
-$dataset_source_term = get_input('dataset_source_term', 'source');
-$dataset_update_frequency = get_input('dataset_update_frequency', 'semester');
-// Mapping
-$dataset_poi_category_default = get_input('dataset_poi_category_default', '');
-$dataset_poi_id = get_input('dataset_poi_id', '');
-$dataset_poi_title = get_input('dataset_poi_title', 'Titre');
-$dataset_poi_description = get_input('dataset_poi_description', 'Description');
-$dataset_poi_category = get_input('dataset_poi_category', 'Catégorie1');
-$dataset_poi_lat = get_input('dataset_poi_lat', 'Latitude');
-$dataset_poi_long = get_input('dataset_poi_long', 'Longitude');
-$dataset_coordinate_system = get_input('dataset_coordinate_system', 'WGS84');
-$dataset_poi_address = get_input('dataset_poi_address', 'Adresse');
-$dataset_poi_postal = get_input('dataset_poi_postal', 'Codepostal');
-$dataset_poi_city = get_input('dataset_poi_city', 'Ville');
-?>
-
+			<?php if (isset($serialized_template)) { ?>
+				<h2><?php echo echo_lang('converter:tplgen:output'); ?></h2>
+				<blockquote>
+					<textarea readonly="readonly" style="width:90%; height:120px;"><?php echo $serialized_template; ?></textarea>
+				</blockquote>
+				<br />
+			<?php } ?>
+			
+			<h2><?php echo echo_lang('converter:tplgen:form'); ?></h2>
 			<form method="POST">
 				<fieldset>
-					<legend>Input technical settings</legend>
-					<p><label>Fields title on first line: <input type="text" name="skip_first_row" value="<?php echo $skip_first_row; ?>" /></label></p>
-					<p><label>Delimiter: <input type="text" name="delimiter" value="<?php echo $delimiter; ?>" /></label></p>
-					<p><label>Enclosure: <input type="text" name="enclosure" value="<?php echo $enclosure; ?>" /></label></p>
-					<p><label>Escape: <input type="text" name="escape" value="<?php echo $escape; ?>" /></label></p>
+					<legend><?php echo echo_lang('converter:tplgen:legend:technical'); ?></legend>
+					<p><label><?php echo echo_lang('converter:tplgen:firstline'); ?> <select name="skip_first_row">
+						<?php if ($skip_first_row) echo '<option value="yes" selected="selected">' . echo_lang('converter:tplgen:firstline:yes') . '</option><option value="no">' . echo_lang('converter:tplgen:firstline:no') . '</option>';
+						else echo '<option value="yes">' . echo_lang('converter:tplgen:firstline:yes') . '</option><option value="no" selected="selected">' . echo_lang('converter:tplgen:firstline:no') . '</option>';
+						?>
+					</select></label></p>
+					<p><label><?php echo echo_lang('converter:tplgen:delimiter'); ?> <input type="text" name="delimiter" value="<?php echo htmlentities($delimiter, ENT_QUOTES); ?>" /></label></p>
+					<p><label><?php echo echo_lang('converter:tplgen:enclosure'); ?> <input type="text" name="enclosure" value="<?php echo htmlentities($enclosure, ENT_QUOTES); ?>" /></label></p>
+					<p><label><?php echo echo_lang('converter:tplgen:escape'); ?><input type="text" name="escape" value="<?php echo htmlentities($escape, ENT_QUOTES); ?>" /></label></p>
 				</fieldset>
 				<br />
 				<br />
 				<fieldset>
-					<legend>Dataset description</legend>
+					<legend><?php echo echo_lang('converter:tplgen:legend:metadata'); ?></legend>
 					<div style="width:45%; float:left;">
-						<p><label>Dataset ID: <input type="text" name="dataset_id" value="<?php echo $dataset_id; ?>" /></label></p>
-						<p><label>Dataset language: <input type="text" name="dataset_lang" value="<?php echo $dataset_lang; ?>" /></label></p>
-						<p><label>Author ID: <input type="text" name="dataset_author_id" value="<?php echo $dataset_author_id; ?>" /></label></p>
-						<p><label>Author name: <input type="text" name="dataset_author_name" value="<?php echo $dataset_author_name; ?>" /></label></p>
-						<p><label>Update frequency: <input type="text" name="dataset_update_frequency" value="<?php echo $dataset_update_frequency; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:dataset_id'); ?> <input type="text" name="dataset_id" value="<?php echo $dataset_id; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:dataset_lang'); ?> <input type="text" name="dataset_lang" value="<?php echo $dataset_lang; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:authorid'); ?> <input type="text" name="dataset_author_id" value="<?php echo $dataset_author_id; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:authorname'); ?> <input type="text" name="dataset_author_name" value="<?php echo $dataset_author_name; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:updatefreq'); ?> <input type="text" name="dataset_update_frequency" value="<?php echo $dataset_update_frequency; ?>" /></label></p>
 					</div>
 					<div style="width:45%; float:right;">
-						<p><label>Licence URL: <input type="text" name="dataset_license_url" value="<?php echo $dataset_license_url; ?>" /></label></p>
-						<p><label>Licence term: <input type="text" name="dataset_license_term" value="<?php echo $dataset_license_term; ?>" /></label></p>
-						<p><label>Source URL: <input type="text" name="dataset_source_url" value="<?php echo $dataset_source_url; ?>" /></label></p>
-						<p><label>Source term: <input type="text" name="dataset_source_term" value="<?php echo $dataset_source_term; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:licenceurl'); ?> <input type="text" name="dataset_license_url" value="<?php echo $dataset_license_url; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:licenceterm'); ?> <input type="text" name="dataset_license_term" value="<?php echo $dataset_license_term; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:sourceurl'); ?> <input type="text" name="dataset_source_url" value="<?php echo $dataset_source_url; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:sourceterm'); ?> <input type="text" name="dataset_source_term" value="<?php echo $dataset_source_term; ?>" /></label></p>
 					</div>
 				</fieldset>
 				<br />
 				<br />
 				<fieldset>
-					<legend>Semantic fields mapping</legend>
+					<legend><?php echo echo_lang('converter:tplgen:legend:semantic'); ?></legend>
 					<div style="width:45%; float:left;">
-						<p><strong>Display fields</strong></p>
-						<p><label>POI default category: <input type="text" name="dataset_poi_category_default" value="<?php echo $dataset_poi_category_default; ?>" /></label></p>
-						<p><label>POI ID field: <input type="text" name="dataset_poi_id" value="<?php echo $dataset_poi_id; ?>" /></label></p>
-						<p><label>POI title: <input type="text" name="dataset_poi_title" value="<?php echo $dataset_poi_title; ?>" /></label></p>
-						<p><label>POI description field: <input type="text" name="dataset_poi_description" value="<?php echo $dataset_poi_description; ?>" /></label></p>
-						<p><label>POI category field: <input type="text" name="dataset_poi_category" value="<?php echo $dataset_poi_category; ?>" /></label></p>
+						<p><strong><?php echo echo_lang('converter:tplgen:legend:display'); ?></strong></p>
+						<p><label><?php echo echo_lang('converter:tplgen:poi_default_cat'); ?> <input type="text" name="dataset_poi_category_default" value="<?php echo $dataset_poi_category_default; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:poi_id'); ?> <input type="text" name="dataset_poi_id" value="<?php echo $dataset_poi_id; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:poi_title'); ?> <input type="text" name="dataset_poi_title" value="<?php echo $dataset_poi_title; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:poi_descr'); ?> <input type="text" name="dataset_poi_description" value="<?php echo $dataset_poi_description; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:poi_cat'); ?> <input type="text" name="dataset_poi_category" value="<?php echo $dataset_poi_category; ?>" /></label></p>
 					</div>
 					<div style="width:45%; float:right;">
-						<p><strong>Geographical fields</strong></p>
-						<p><label>POI latitude field: <input type="text" name="dataset_poi_lat" value="<?php echo $dataset_poi_lat; ?>" /></label></p>
-						<p><label>POI longitude field: <input type="text" name="dataset_poi_long" value="<?php echo $dataset_poi_long; ?>" /></label></p>
-						<p><label>POI geographical coordinates system field: <input type="text" name="dataset_coordinate_system" value="<?php echo $dataset_coordinate_system; ?>" /></label></p>
-						<p><label>POI address field: <input type="text" name="dataset_poi_address" value="<?php echo $dataset_poi_address; ?>" /></label></p>
-						<p><label>POI postal code field: <input type="text" name="dataset_poi_postal" value="<?php echo $dataset_poi_postal; ?>" /></label></p>
-						<p><label>POI city field: <input type="text" name="dataset_poi_city" value="<?php echo $dataset_poi_city; ?>" /></label></p>
+						<p><strong><?php echo echo_lang('converter:tplgen:legend:geo'); ?></strong></p>
+						<p><label><?php echo echo_lang('converter:tplgen:lat'); ?> <input type="text" name="dataset_poi_lat" value="<?php echo $dataset_poi_lat; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:long'); ?> <input type="text" name="dataset_poi_long" value="<?php echo $dataset_poi_long; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:geosystem'); ?> <input type="text" name="dataset_coordinate_system" value="<?php echo $dataset_coordinate_system; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:address'); ?> <input type="text" name="dataset_poi_address" value="<?php echo $dataset_poi_address; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:postalcode'); ?> <input type="text" name="dataset_poi_postal" value="<?php echo $dataset_poi_postal; ?>" /></label></p>
+						<p><label><?php echo echo_lang('converter:tplgen:city'); ?> <input type="text" name="dataset_poi_city" value="<?php echo $dataset_poi_city; ?>" /></label></p>
 					</div>
 				</fieldset>
-				
+				<p><label><?php echo echo_lang('converter:tplgen:action'); ?> 
+					<select name="action">
+						<option value="generate"><?php echo echo_lang('converter:tplgen:action:generate'); ?></option>
+						<option value="export"><?php echo echo_lang('converter:tplgen:action:export'); ?></option>
+					</select>
+				</label></p>
+				<p><input type="submit" value="<?php echo echo_lang('converter:tplgen:submit'); ?>" /></p>
 			</form>
 		</div>
 	</body>

@@ -12,11 +12,13 @@ if (empty($filename)) { $filename = 'export_' . date('YmdHis'); }
 // Mapping template : any local or remote template config
 global $template;
 // Allow to fetch a serialized array structure from remote source
-$remote_template = get_input('template');
+$remote_template = get_input('remote_template');
+$serialized_template = get_input('serialized_template');
 if (!empty($remote_template)) {
 	$remote_template = file_get_contents($remote_template);
-	$remote_template = unserialize($remote_template);
-	$template = $remote_template;
+	$template = unserialize($remote_template);
+} else if (!empty($serialized_template)) {
+	$template = unserialize($serialized_template);
 } else {
 	// Let's define the metadata and mapping values
 	$template = array(

@@ -21,6 +21,16 @@ global $CONFIG;
 if (!include_once("languages/$lang.php")) { include_once("languages/en.php"); }
 $CONFIG['language'] = $language;
 
+
+function add_lang_switch($lang = 'en', $lang_list = array('en', 'fr')) {
+	$return = '';
+	foreach ($lang_list as $l) {
+		if ($l == $lang) { $return .= '<strong><a href="?lang=' . $l . '">' . strtoupper($l) . '</a></strong> '; } 
+		else { $return .= '<a href="?lang=' . $l . '">' . strtoupper($l) . '</a> '; }
+	}
+	return $return;
+}
+
 /*
 		$filename = $_SESSION['dataset-id'];
 		if ($id == null || empty($id)) {

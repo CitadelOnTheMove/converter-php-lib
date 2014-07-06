@@ -22,19 +22,23 @@ $base_url = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['S
 
 	<body>
 		<div class="container">
+			<span style="float:right; font-family:monospace; font-size:1.2em;">
+				<?php echo add_lang_switch($lang); ?>
+			</span>
 			<h1><?php echo echo_lang('converter:title'); ?></h1>
 			<?php echo echo_lang('converter:description'); ?>
 			
 			<?php
 			$source = get_input('source');
 			$filename = get_input('filename');
-			$template = get_input('template');
+			$remote_template = get_input('remote_template');
+			$serialized_template = get_input('serialized_template');
 			if (!empty($source)) {
-				$download_url = $base_url . 'convert.php?source=' . urlencode($source) . '&filename=' . urlencode($filename) . '&template=' . urlencode($template);
+				$download_url = $base_url . 'convert.php?source=' . urlencode($source) . '&filename=' . urlencode($filename) . '&remote_template=' . urlencode($remote_template) . '&serialized_template=' . urlencode($serialized_template);
 				?>
 				<blockquote>
 					<p><a href="<?php echo $base_url . $download_url; ?>"><?php echo $CONFIG['language']['converter:download:file']; ?></a></p>
-					<p><?php echo echo_lang('converter:download:link'); ?><br /><q><?php echo $download_url; ?></q></p>
+					<p><?php echo echo_lang('converter:download:link'); ?><br /><pre><?php echo $download_url; ?></pre></p>
 				</blockquote><br />
 				<?php
 			}
@@ -42,14 +46,15 @@ $base_url = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['S
 			// Set default if no value specified
 			if (empty($source)) { $source = 'samples/dataset.csv'; }
 			if (empty($filename)) { $filename = ''; }
-			if (empty($template)) { $template = 'samples/template.txt'; }
+			if (empty($remote_template)) { $remote_template = 'samples/template.txt'; }
 			?>
 			
 			<form method="POST">
 				<fieldset>
 					<legend><?php echo echo_lang('converter:form'); ?></legend>
 				<p><label><?php echo echo_lang('converter:form:source'); ?><input type="text" name="source" value="<?php echo $source; ?>" /></label></p>
-				<p><label><?php echo echo_lang('converter:form:template'); ?><input type="text" name="template" value="<?php echo $template; ?>" /></label></p>
+				<p><label><?php echo echo_lang('converter:form:template'); ?><input type="text" name="remote_template" value="<?php echo $remote_template; ?>" /></label></p>
+				<p><label><?php echo echo_lang('converter:form:serialized_template'); ?><textarea type="text" name="serialized_template"><?php echo $serialized_template; ?></textarea></label></p>
 				<p><label><?php echo echo_lang('converter:form:filename'); ?><input type="text" name="filename" value="<?php echo $filename; ?>" /></label></p>
 				<p><input type="submit" value="<?php echo echo_lang('converter:form:givelink'); ?>" /></p>
 				</fieldset>
