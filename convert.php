@@ -9,6 +9,9 @@ if (empty($source)) $source = 'samples/dataset.csv';
 $filename = get_input('filename');
 if (empty($filename)) { $filename = 'export_' . date('YmdHis'); }
 
+// Export format : default to Citadel JSON but allow to test Citadel-enriched geoJSON
+$format = get_input('format', 'citadel');
+
 // Mapping template : any local or remote template config
 global $template;
 // Allow to fetch a serialized array structure from remote source
@@ -80,7 +83,13 @@ if (!empty($remote_template)) {
 $csv = getDataset($source, $template['delimiter'], $template['enclosure'], $template['escape']);
 if (!$csv) { echo $language['error:nofilefound']; exit; }
 
-$citadel_json = getJSON($csv, $template);
+switch($format) {
+	case 'geojson':
+		$citadel_json = getGeoJSON($csv, $template);
+		break;
+	default:
+		$citadel_json = getJSON($csv, $template);
+}
 
 
 //echo $citadel_json; exit;

@@ -36,6 +36,7 @@ $language = array(
 	'converter:form:template' => "Template file: ",
 	'converter:form:serialized_template' => "OR Template file content: ",
 	'converter:form:filename' => "Exported file name (optional, no file extension): ",
+	'converter:form:format' => "Export format: ",
 	'converter:form:givelink' => "Give me the link to the converted file !",
 	
 	// Template generator
