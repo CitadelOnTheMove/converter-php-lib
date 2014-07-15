@@ -88,6 +88,7 @@ function getJSON($dataset, $template) {
 	$json->dataset->author = new stdClass();
 	$json->dataset->author->id = $template['metadata']['dataset-author-id'];
 	$json->dataset->author->value = $template['metadata']['dataset-author-name'];
+
 	$json->dataset->license = new stdClass();
 	$json->dataset->license->href = $template['metadata']['dataset-license-url'];
 	$json->dataset->license->term = $template['metadata']['dataset-license-term'];
@@ -146,6 +147,176 @@ function getJSON($dataset, $template) {
 
 		$json->dataset->poi[] = $poiObj;
 	}
+	
+	// Handle older versions of JSON encoding functions
+	if (version_compare(phpversion(), '5.4', '<')) {
+		// PHP < 5.4 doesn't excape unicode (you end up with \u00 characters)
+		// So we need to convert it before returning the content
+		$json = json_encode($json);
+		return preg_replace_callback(
+			'/\\\\u([0-9a-f]{4})/i',
+			function ($matches) {
+				$sym = mb_convert_encoding(
+					pack('H*', $matches[1]), 
+					'UTF-8', 
+					'UTF-16'
+				);
+				return $sym;
+			},
+			$json
+		);
+	} else {
+		return json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+	}
+}
+
+
+
+/* Return geoJSON from any CSV file, using a pre-defined template mapping
+ * Includes the Citadel JSON fields in it as well
+ * $dataset : the dataset array (from a CSV file, one row per POI)
+ * $skipFirstRow : whether first row is a label or not
+ */
+function getGeoJSON($dataset, $template) {
+	global $template;
+	global $array_mapping;
+	$skipFirstRow = $template['skip-first-row'];
+	$array_mapping = setArrayMapping($dataset[0]);
+	$now = new DateTime();
+	
+	// Build the JSON
+	$json = new stdClass();
+	
+	// Build the Citadel JSON
+	$json->dataset = new stdClass();
+	
+	// Metadata fields
+	$json->dataset->id = $template['metadata']['dataset-id'];
+	$json->dataset->updated = $now->format('c');
+	$json->dataset->created = $now->format('c');
+	$json->dataset->lang = $template['metadata']['dataset-lang'];
+	$json->dataset->author = new stdClass();
+	$json->dataset->author->id = $template['metadata']['dataset-author-id'];
+	$json->dataset->author->value = $template['metadata']['dataset-author-name'];
+	$json->dataset->license = new stdClass();
+	$json->dataset->license->href = $template['metadata']['dataset-license-url'];
+	$json->dataset->license->term = $template['metadata']['dataset-license-term'];
+	$json->dataset->link = new stdClass();
+	$json->dataset->link->href = $template['metadata']['dataset-source-url'];
+	$json->dataset->link->term = $template['metadata']['dataset-source-term'];
+	$json->dataset->updatefrequency = $template['metadata']['dataset-update-frequency'];
+	
+	$defaultCategories = $template['mapping']['dataset-poi-category-default'];
+	
+	$json->dataset->poi = array();
+	
+	// Data content
+	// @TODO : replace by a foreach loop
+	//for ($i = $skipFirstRow ? 1 : 0; $i < count($dataset); $i++) {
+	//	$poiArray = $dataset[$i];
+	//}
+	$i = 0;
+	foreach ($dataset as $poiArray) {
+		$i++;
+		// Skip first row if set as headers row
+		if (($i == 1) && $skipFirstRow) continue;
+		$poiObj = new StdClass();
+		$poiObj->id = getValue($poiArray, 'dataset-poi-id');
+		// Set incremental id if no defined id in the dataset (required by apps)
+		//if (empty($poiObj->id)) { $poiObj->id = $i + 1; }
+		if (empty($poiObj->id)) { $poiObj->id = $i; }
+		$poiObj->title = getValue($poiArray, 'dataset-poi-title');
+		$poiObj->description = getValue($poiArray, 'dataset-poi-description');
+		if ($poiObj->description == null) {
+			$poiObj->description = "";
+		}
+		$poiObj->category = explode(',', getValue($poiArray, 'dataset-poi-category'));
+		array_walk($poiObj->category, create_function('&$val', '$val = trim($val);'));
+		if (count($poiObj->category) == 0 || (count($poiObj->category) == 1 && $poiObj->category[0] == '')) {
+			$poiObj->category = $defaultCategories;
+		}
+		$location = new StdClass();
+		$location->point = new StdClass();
+		$location->point->term = "centroid";
+		$location->point->pos = new StdClass();
+		$location->point->pos->srsName = ($template['mapping']['dataset-coordinate-system'] == "WGS84") ? "http://www.opengis.net/def/crs/EPSG/0/4326" : null;
+		if ($template['mapping']['dataset-poi-lat'] == $template['mapping']['dataset-poi-long']) {
+			$latlong = getValue($poiArray, 'dataset-poi-lat');
+			$latlong = trim(str_replace(';', ' ', $latlong));
+			$location->point->pos->posList = $latlong;
+		} else {
+			$location->point->pos->posList = trim(getValue($poiArray, 'dataset-poi-lat')) . ' ' . trim(getValue($poiArray, 'dataset-poi-long'));
+		}
+		$location->address = new StdClass();
+		$location->address->value = getValue($poiArray, 'dataset-poi-address');
+		$location->address->postal = getValue($poiArray, 'dataset-poi-postal');
+		$location->address->city = getValue($poiArray, 'dataset-poi-city');
+		$poiObj->location = $location;
+		$poiObj->attribute = array();
+
+		$json->dataset->poi[] = $poiObj;
+	}
+	
+	// Build the geoJSON
+	$json->type = "FeatureCollection";
+	$json->generator = "Citadel on the Move PHP converter";
+	$json->copyright = $template['metadata']['dataset-license-term'] . ' ' . $template['metadata']['dataset-license-url'];
+	$json->timestamp = $now->format('c');
+	$json->features = new stdClass();
+	
+	$json->features = array();
+	
+	// Data content
+	// @TODO : replace by a foreach loop
+	//for ($i = $skipFirstRow ? 1 : 0; $i < count($dataset); $i++) {
+	//	$poiArray = $dataset[$i];
+	//}
+	$i = 0;
+	foreach ($dataset as $poiArray) {
+		$i++;
+		// Skip first row if set as headers row
+		if (($i == 1) && $skipFirstRow) continue;
+		$poiObj = new StdClass();
+		$poiObj->type = "Feature";
+		$poiObj->id = getValue($poiArray, 'dataset-poi-id');
+		// Set incremental id if no defined id in the dataset (required by apps)
+		//if (empty($poiObj->id)) { $poiObj->id = $i + 1; }
+		if (empty($poiObj->id)) { $poiObj->id = $i; }
+		// Build Feature properties
+		$poiObj->properties = new StdClass();
+		$poiObj->properties->title = getValue($poiArray, 'dataset-poi-title');
+		$poiObj->properties->description = getValue($poiArray, 'dataset-poi-description');
+		if ($poiObj->properties->description == null) {
+			$poiObj->properties->description = "";
+		}
+		$poiObj->properties->category = explode(',', getValue($poiArray, 'dataset-poi-category'));
+		array_walk($poiObj->properties->category, create_function('&$val', '$val = trim($val);'));
+		if (count($poiObj->properties->category) == 0 || (count($poiObj->properties->category) == 1 && $poiObj->properties->category[0] == '')) {
+			$poiObj->properties->category = $defaultCategories;
+		}
+		$poiObj->properties->address = getValue($poiArray, 'dataset-poi-address');
+		$poiObj->properties->postal = getValue($poiArray, 'dataset-poi-postal');
+		$poiObj->properties->city = getValue($poiArray, 'dataset-poi-city');
+		// Build Point properties
+		$location = new StdClass();
+		$location->type = "Point";
+		$location->coordinates = array();
+		if ($template['mapping']['dataset-poi-lat'] == $template['mapping']['dataset-poi-long']) {
+			$latlong = getValue($poiArray, 'dataset-poi-lat');
+			$latlong = trim($latlong);
+			$latlong = explode(';', $latlong);
+			$location->coordinates = array((float) $latlong[1], (float) $latlong[0]);
+		} else {
+			$latlong = array((float) trim(getValue($poiArray, 'dataset-poi-long')), (float) trim(getValue($poiArray, 'dataset-poi-lat')));
+			$location->coordinates = $latlong;
+		}
+		$poiObj->geometry = $location;
+
+		$json->features[] = $poiObj;
+	}
+	
+	
+	
 	
 	// Handle older versions of JSON encoding functions
 	if (version_compare(phpversion(), '5.4', '<')) {
