@@ -9,8 +9,10 @@ if (empty($source)) $source = 'samples/dataset.csv';
 $filename = get_input('filename');
 if (empty($filename)) { $filename = 'export_' . date('YmdHis'); }
 
-// Export format : default to Citadel JSON but allow to test Citadel-enriched geoJSON
+// Export format : default to Citadel JSON but allows to export Citadel-enriched geoJSON
 $format = get_input('format', 'citadel');
+// Import format : default to CSV but allows to use geoJSON
+$import_format = get_input('import', 'csv');
 
 // Mapping template : any local or remote template config
 global $template;
@@ -77,18 +79,26 @@ if (!empty($remote_template)) {
 
 // Load CSV file
 // str_getcsv ( string $input [, string $delimiter = "," [, string $enclosure = '"' [, string $escape = "\\" ]]] )
-// $csv = array_map('str_getcsv', file('data.csv')); // Parse full file in one line
+// $csvdata = array_map('str_getcsv', file('data.csv')); // Parse full file in one line
 // auto_detect_line_endings();
 //echo "<html><head><meta charset='UTF-8' /></head><body>";
-$csv = getDataset($source, $template['delimiter'], $template['enclosure'], $template['escape']);
-if (!$csv) { echo $language['error:nofilefound']; exit; }
+switch($import_format) {
+	case 'geojson':
+		$geojson = getGeoJSON($source);
+		$csvdata = getGeoJSONDataset($geojson);
+		//echo '<pre>' . print_r($csvdata, true) . '</pre>'; exit;
+		break;
+	default:
+		$csvdata = getCSVDataset($source, $template['delimiter'], $template['enclosure'], $template['escape']);
+}
+if (!$csvdata) { echo $language['error:nofilefound']; exit; }
 
 switch($format) {
 	case 'geojson':
-		$citadel_json = getGeoJSON($csv, $template);
+		$citadel_json = renderGeoJSON($csvdata, $template, $geojson);
 		break;
 	default:
-		$citadel_json = getJSON($csv, $template);
+		$citadel_json = renderJSON($csvdata, $template);
 }
 
 

@@ -30,10 +30,11 @@ $base_url = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['S
 			$source = get_input('source', 'samples/dataset.csv');
 			$filename = get_input('filename', '');
 			$format = get_input('format', 'citadel');
+			$import_format = get_input('import', 'csv');
 			$remote_template = get_input('remote_template');
 			$serialized_template = get_input('serialized_template');
 			if (!empty($source)) {
-				$download_url = $base_url . 'convert.php?source=' . urlencode($source) . '&filename=' . urlencode($filename) . '&remote_template=' . urlencode($remote_template) . '&serialized_template=' . urlencode($serialized_template) . '&format=' . urlencode($format);
+				$download_url = $base_url . 'convert.php?source=' . urlencode($source) . '&filename=' . urlencode($filename) . '&remote_template=' . urlencode($remote_template) . '&serialized_template=' . urlencode($serialized_template) . '&format=' . urlencode($format) . '&import=' . urlencode($import_format);
 				?>
 				<blockquote>
 					<p><a href="<?php echo $download_url; ?>"><?php echo $CONFIG['language']['converter:download:file']; ?></a></p>
@@ -53,6 +54,7 @@ $base_url = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['S
 						<p><label><?php echo echo_lang('converter:form:source'); ?><input type="text" name="source" value="<?php echo $source; ?>" /></label></p>
 						<p><label><?php echo echo_lang('converter:form:filename'); ?><input type="text" name="filename" value="<?php echo $filename; ?>" /></label></p>
 						<p><label><?php echo echo_lang('converter:form:format'); ?><select name="format" value="<?php echo $format; ?>"><option value="citadel" <?php if ($format == 'citadel') echo 'selected="selected"'; ?>>Citadel JSON</option><option value="geojson" <?php if ($format == 'geojson') echo 'selected="selected"'; ?>>geoJSON</option></select></p>
+						<p><label><?php echo echo_lang('converter:form:import'); ?><select name="import" value="<?php echo $import_format; ?>"><option value="csv" <?php if ($format == 'csv') echo 'selected="selected"'; ?>>CSV</option><option value="geojson" <?php if ($format == 'geojson') echo 'selected="selected"'; ?>>geoJSON</option></select></p>
 					</div>
 					<div style="width:45%; float:right;">
 						<p><label><?php echo echo_lang('converter:form:template'); ?><input type="text" name="remote_template" value="<?php echo $remote_template; ?>" /></label></p>

@@ -69,7 +69,7 @@ function getDatasetPreview($lines = 0) {
  * $dataset : the dataset array (from a CSV file, one row per POI)
  * $skipFirstRow : whether first row is a label or not
  */
-function getJSON($dataset, $template) {
+function renderJSON($dataset, $template) {
 	global $template;
 	global $array_mapping;
 	$skipFirstRow = $template['skip-first-row'];
@@ -98,6 +98,7 @@ function getJSON($dataset, $template) {
 	$json->dataset->updatefrequency = $template['metadata']['dataset-update-frequency'];
 	
 	$defaultCategories = $template['mapping']['dataset-poi-category-default'];
+	$defaultCategories = explode(',', $defaultCategories);
 	
 	$json->dataset->poi = array();
 	
@@ -130,7 +131,7 @@ function getJSON($dataset, $template) {
 		$location->point = new StdClass();
 		$location->point->term = "centroid";
 		$location->point->pos = new StdClass();
-		$location->point->pos->srsName = ($template['mapping']['dataset-coordinate-system'] == "WGS84") ? "http://www.opengis.net/def/crs/EPSG/0/4326" : null;
+		$location->point->pos->srsName = ($template['mapping']['dataset-coordinate-system'] == "WGS84") ? "http://www.opengis.net/def/crs/EPSG/0/4326" : "";
 		if ($template['mapping']['dataset-poi-lat'] == $template['mapping']['dataset-poi-long']) {
 			$latlong = getValue($poiArray, 'dataset-poi-lat');
 			$latlong = trim(str_replace(';', ' ', $latlong));
@@ -172,12 +173,16 @@ function getJSON($dataset, $template) {
 
 
 
-/* Return geoJSON from any CSV file, using a pre-defined template mapping
+/* Return geoJSON + Citadel JSON from any CSV file, using a pre-defined template mapping
  * Includes the Citadel JSON fields in it as well
  * $dataset : the dataset array (from a CSV file, one row per POI)
  * $skipFirstRow : whether first row is a label or not
  */
-function getGeoJSON($dataset, $template) {
+// @TODO : consider 2 cases
+// 	1) export CSV file to geoJSON + Citadel JSON
+// 	2) if we already have geoJSON, don't modify it at all, and only add the new Citadel JSON
+// 	=> We need to merge export functions and add input and export parameters
+function renderGeoJSON($dataset, $template) {
 	global $template;
 	global $array_mapping;
 	$skipFirstRow = $template['skip-first-row'];
@@ -207,14 +212,11 @@ function getGeoJSON($dataset, $template) {
 	$json->dataset->updatefrequency = $template['metadata']['dataset-update-frequency'];
 	
 	$defaultCategories = $template['mapping']['dataset-poi-category-default'];
+	$defaultCategories = explode(',', $defaultCategories);
 	
 	$json->dataset->poi = array();
 	
 	// Data content
-	// @TODO : replace by a foreach loop
-	//for ($i = $skipFirstRow ? 1 : 0; $i < count($dataset); $i++) {
-	//	$poiArray = $dataset[$i];
-	//}
 	$i = 0;
 	foreach ($dataset as $poiArray) {
 		$i++;
@@ -372,10 +374,10 @@ function getValue($poiArray, $key) {
 			return $poiArray["$array_key"];
 		} else {
 			error_log("DEBUG : empty array_key for key=$key, map_key=$map_key");
-			return null;
+			return "";
 		}
 	}
-	return null;
+	return "";
 }
 
 
@@ -408,12 +410,58 @@ function setArrayMapping($labels) {
 
 // Get the dataset as an array : one array entry per "row" or POI
 // The first row should be the dataset column labels (for easier mapping)
-function getDataset($dataset, $delimiter = ';', $enclosure = '"', $escape = '\\') {
+function getCSVDataset($dataset, $delimiter = ';', $enclosure = '"', $escape = '\\') {
 	$result = array();
 	$content = file($dataset);
 	if ($content) {
 		foreach ($content as $line) {
 			$result[] = str_getcsv(toUTF8($line), $delimiter, $enclosure, $escape);
+		}
+		return $result;
+	} else return false;
+}
+
+// Get the geoJSON dataset
+function getGeoJSON($dataset) {
+	$result = array();
+	$geojson = file_get_contents($dataset);
+	$geojson = utf8_encode($geojson);
+	$geojson = str_replace(array("\n","\r"),"",$geojson); 
+	$geojson = preg_replace('/([{,]+)(\s*)([^"]+?)\s*:/','$1"$3":',$geojson); 
+	$geojson = json_decode($geojson);
+	return $geojson;
+}
+
+// Transform the geoJSON dataset into an array : one array entry per "row" == POI
+// The first row should be the dataset column labels (for easier mapping)
+function getGeoJSONDataset($geojson) {
+	$result = array();
+	if ($geojson) {
+		switch($geojson->type) {
+			case "FeatureCollection":
+				// Build coordinates keys first
+				$keys = array('longitude', 'latitude');
+				// Build properties keys and use them as we would with "first CSV line"
+				foreach($geojson->features[0]->properties as $key => $val) { $keys[] = $key; }
+				//echo print_r($keys, true) . '<hr />';
+				$result[] = $keys;
+				foreach($geojson->features as $element) {
+					$poi = array($element->geometry->coordinates[0], $element->geometry->coordinates[1]);
+					// Add POI data
+					foreach($keys as $key) {
+						if (in_array($key, array('longitude', 'latitude'))) continue;
+						$poi[] = $element->properties->$key;
+					}
+					$result[] = $poi;
+					//echo print_r($poi, true) . '<hr />';
+				}
+				break;
+			case "Feature":
+				// Only one feature in this file ??
+			case "Point":
+			default:
+				// Valid geoJSON but pointless
+				return false;
 		}
 		return $result;
 	} else return false;
@@ -459,7 +507,9 @@ function get_input($variable, $default = '', $filter= true) {
 // @TODO Add sprintf params and logic
 function echo_lang($key, $params = array()) {
 	global $CONFIG;
-	return $CONFIG['language'][$key];
+	$return = $CONFIG['language'][$key];
+	if (empty($return)) $return = $key;
+	return $return;
 }
 
 
