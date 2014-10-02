@@ -88,6 +88,11 @@ switch($import_format) {
 		$csvdata = getGeoJSONDataset($geojson);
 		//echo '<pre>' . print_r($csvdata, true) . '</pre>'; exit;
 		break;
+	case 'osmjson':
+		$osmjson = getGeoJSON($source);
+		$csvdata = getOsmJSONDataset($osmjson);
+		//echo '<pre>' . print_r($csvdata, true) . '</pre>'; exit;
+		break;
 	default:
 		$csvdata = getCSVDataset($source, $template['delimiter'], $template['enclosure'], $template['escape']);
 }

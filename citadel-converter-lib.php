@@ -421,14 +421,37 @@ function getCSVDataset($dataset, $delimiter = ';', $enclosure = '"', $escape = '
 	} else return false;
 }
 
+
+// See http://stackoverflow.com/questions/10290849/how-to-remove-multiple-utf-8-bom-sequences-before-doctype
+// BOM and other binary characters break json_decode...
+function remove_utf8_bom($text) {
+	$bom = pack('H*','EFBBBF');
+	$text = preg_replace("/^$bom/", '', $text);
+	return $text;
+}
+
 // Get the geoJSON dataset
 function getGeoJSON($dataset) {
 	$result = array();
-	$geojson = file_get_contents($dataset);
+	// File retrieval can fail on timeout or redirects, so make it more failsafe
+	//$geojson = file_get_contents($dataset);
+	$context = stream_context_create(array(
+			'http' => array(
+				'max_redirects' => 5,
+				'timeout' => 60,
+			)
+		));
+	// @TODO : we should store files at least for a few minutes or hours in a tmp/folder, 
+	// using timestamp and URL hash for quick retrieval based on time and URL source unicity
+	$geojson = file_get_contents($dataset, false, $context);
 	$geojson = utf8_encode($geojson);
 	$geojson = str_replace(array("\n","\r"),"",$geojson); 
 	$geojson = preg_replace('/([{,]+)(\s*)([^"]+?)\s*:/','$1"$3":',$geojson); 
+	$geojson = preg_replace('/(,)\s*}$/','}',$geojson);
+	$geojson = remove_utf8_bom($geojson);
+	$geojson = preg_replace_callback('/([\x{0000}-\x{0008}]|[\x{000b}-\x{000c}]|[\x{000E}-\x{001F}])/u', function($sub_match){return '\u00' . dechex(ord($sub_match[1]));},$geojson);
 	$geojson = json_decode($geojson);
+	//echo print_r($geojson, true); // debug
 	return $geojson;
 }
 
@@ -462,6 +485,40 @@ function getGeoJSONDataset($geojson) {
 			default:
 				// Valid geoJSON but pointless
 				return false;
+		}
+		return $result;
+	} else return false;
+}
+
+
+// Transform the osmJSON dataset into an array : one array entry per "row" == POI
+// The first row should be the dataset column labels (for easier mapping)
+// Note that OSM JSON data can be exported directly by Overpass API
+function getOsmJSONDataset($osmjson) {
+	$result = array();
+	$main_keys = array('id', 'longitude', 'latitude');
+	$title_keys = $main_keys;
+	if ($osmjson) {
+		
+		// Build label keys first
+		foreach($osmjson->elements as $element) {
+			foreach($element->tags as $key => $tag) {
+				if (!in_array($key, $title_keys)) $title_keys[] = $key;
+			}
+		}
+		$result[] = $title_keys;
+		
+		// Build properties keys and use them as we would with "first CSV line"
+		//echo print_r($keys, true) . '<hr />';
+		foreach($osmjson->elements as $element) {
+			$poi = array($element->id, $element->lon, $element->lat);
+			// Add POI data
+			foreach($title_keys as $key) {
+				if (in_array($key, $main_keys)) continue;
+				$poi[] = $element->tags->$key;
+			}
+			$result[] = $poi;
+			//echo print_r($poi, true) . '<hr />';
 		}
 		return $result;
 	} else return false;
