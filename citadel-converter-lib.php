@@ -66,7 +66,7 @@ function getDatasetPreview($lines = 0) {
 
 
 /* Return Citadel-JSON from any CSV file, using a pre-defined template mapping
- * $dataset : the dataset array (from a CSV file, one row per POI)
+ * $dataset : the dataset array (as if created from a CSV file, one row per POI)
  * $skipFirstRow : whether first row is a label or not
  */
 function renderJSON($dataset, $template) {
@@ -88,7 +88,6 @@ function renderJSON($dataset, $template) {
 	$json->dataset->author = new stdClass();
 	$json->dataset->author->id = $template['metadata']['dataset-author-id'];
 	$json->dataset->author->value = $template['metadata']['dataset-author-name'];
-
 	$json->dataset->license = new stdClass();
 	$json->dataset->license->href = $template['metadata']['dataset-license-url'];
 	$json->dataset->license->term = $template['metadata']['dataset-license-term'];
@@ -149,26 +148,8 @@ function renderJSON($dataset, $template) {
 		$json->dataset->poi[] = $poiObj;
 	}
 	
-	// Handle older versions of JSON encoding functions
-	if (version_compare(phpversion(), '5.4', '<')) {
-		// PHP < 5.4 doesn't excape unicode (you end up with \u00 characters)
-		// So we need to convert it before returning the content
-		$json = json_encode($json);
-		return preg_replace_callback(
-			'/\\\\u([0-9a-f]{4})/i',
-			function ($matches) {
-				$sym = mb_convert_encoding(
-					pack('H*', $matches[1]), 
-					'UTF-8', 
-					'UTF-16'
-				);
-				return $sym;
-			},
-			$json
-		);
-	} else {
-		return json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-	}
+	// Export json (handle older versions of JSON encoding functions)
+	return converter_export_json($json);
 }
 
 
@@ -318,28 +299,8 @@ function renderGeoJSON($dataset, $template) {
 	}
 	
 	
-	
-	
-	// Handle older versions of JSON encoding functions
-	if (version_compare(phpversion(), '5.4', '<')) {
-		// PHP < 5.4 doesn't excape unicode (you end up with \u00 characters)
-		// So we need to convert it before returning the content
-		$json = json_encode($json);
-		return preg_replace_callback(
-			'/\\\\u([0-9a-f]{4})/i',
-			function ($matches) {
-				$sym = mb_convert_encoding(
-					pack('H*', $matches[1]), 
-					'UTF-8', 
-					'UTF-16'
-				);
-				return $sym;
-			},
-			$json
-		);
-	} else {
-		return json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-	}
+	// Export json (handle older versions of JSON encoding functions)
+	return converter_export_json($json);
 }
 
 
@@ -569,5 +530,36 @@ function echo_lang($key, $params = array()) {
 	return $return;
 }
 
+
+// Encode an PHP Object into JSON
+function converter_export_json($json) {
+	// Handle older versions of JSON encoding functions
+	if (version_compare(phpversion(), '5.4', '<')) {
+		// PHP < 5.4 doesn't excape unicode (you end up with \u00 characters)
+		// So we need to convert it before returning the content
+		$json = json_encode($json);
+		return preg_replace_callback(
+			'/\\\\u([0-9a-f]{4})/i',
+			function ($matches) {
+				$sym = mb_convert_encoding(pack('H*', $matches[1]), 'UTF-8', 'UTF-16');
+				return $sym;
+			}, 
+			$json
+		);
+	} else {
+		return json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+	}
+}
+
+
+// Write file to disk
+function converter_write_file($target_file = "", $content = '') {
+	if ($fp = fopen($target_file, 'w')) {
+		fwrite($fp, $content);
+		fclose($fp);
+		return true;
+	}
+	return false;
+}
 
 
