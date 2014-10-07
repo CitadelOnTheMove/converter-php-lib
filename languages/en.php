@@ -44,7 +44,7 @@ $language = array(
 	'converter:tplgen:title' => "Conversion template generator",
 	'converter:tplgen:description' => "<p>This form is meant to facilitate the generation of mapping templates that can be used directly by the converter.</p>
 			<p>A mapping template is basically a serialized PHP array, so it a text string that can be hosted on any web server, or sent in a form.</p>
-			<p>This tool makes it generation easier</p>",
+			<p>This tool makes it generation and edition easier</p>",
 	'converter:tplgen:output' => "Generated conversion template",
 	'converter:tplgen:form' => "Edit / Generate a conversion template",
 	'converter:tplgen:legend:technical' => "Input technical settings",
@@ -83,6 +83,8 @@ $language = array(
 	'converter:tplgen:action:generate' => "Output template and keep tweaking / editing it",
 	'converter:tplgen:action:export' => "Export final template (form will disappear)",
 	
+	'converter:tplgen:legend:import' => "OR Import and edit existing template",
+	'converter:tplgen:import' => "Template file content",
 	
 	
 );
