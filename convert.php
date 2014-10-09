@@ -87,7 +87,7 @@ switch($import_format) {
 	case 'geojson':
 		$geojson = getGeoJSON($source);
 		$csvdata = getGeoJSONDataset($geojson);
-		echo '<pre>geoJSOn : ' . print_r($csvdata, true) . '</pre>'; exit;
+		//echo '<pre>geoJSOn : ' . print_r($csvdata, true) . '</pre>'; exit;
 		break;
 	case 'osmjson':
 		$osmjson = getGeoJSON($source);

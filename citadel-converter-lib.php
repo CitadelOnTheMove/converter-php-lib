@@ -81,7 +81,7 @@ function renderJSON($dataset, $template) {
 	$json->dataset = new stdClass();
 	
 	// Metadata fields
-	$json->dataset->id = $template['metadata']['dataset-id'];
+	$json->dataset->id = (string) $template['metadata']['dataset-id'];
 	$json->dataset->updated = $now->format('c');
 	$json->dataset->created = $now->format('c');
 	$json->dataset->lang = $template['metadata']['dataset-lang'];
@@ -112,14 +112,22 @@ function renderJSON($dataset, $template) {
 		// Skip first row if set as headers row
 		if (($i == 1) && $skipFirstRow) continue;
 		$poiObj = new StdClass();
-		$poiObj->id = getValue($poiArray, 'dataset-poi-id');
+		$poiObj->id = (string) getValue($poiArray, 'dataset-poi-id');
 		// Set incremental id if no defined id in the dataset (required by apps)
 		//if (empty($poiObj->id)) { $poiObj->id = $i + 1; }
-		if (empty($poiObj->id)) { $poiObj->id = $i; }
+		if (empty($poiObj->id)) { $poiObj->id = (string) $i; }
 		$poiObj->title = getValue($poiArray, 'dataset-poi-title');
 		$poiObj->description = getValue($poiArray, 'dataset-poi-description');
 		if ($poiObj->description == null) {
 			$poiObj->description = "";
+		}
+		// Allow to add all available data into a single field
+		if ($template['mapping']['dataset-poi-description'] == 'all') {
+			$poiObj->description = '';
+			//echo print_r($array_mapping, true); exit;
+			foreach($array_mapping as $name => $key) {
+				if (!empty($poiArray[$key])) $poiObj->description .= '<strong>' . $name . '&nbsp;:</strong> ' . $poiArray[$key] . '<br />';
+			}
 		}
 		$poiObj->category = explode(',', getValue($poiArray, 'dataset-poi-category'));
 		array_walk($poiObj->category, create_function('&$val', '$val = trim($val);'));
@@ -138,6 +146,8 @@ function renderJSON($dataset, $template) {
 		} else {
 			$location->point->pos->posList = trim(getValue($poiArray, 'dataset-poi-lat')) . ' ' . trim(getValue($poiArray, 'dataset-poi-long'));
 		}
+		// Invalid coordinates break the file validity, so forget about them !
+		if ($location->point->pos->posList == " ") { continue; }
 		$location->address = new StdClass();
 		$location->address->value = getValue($poiArray, 'dataset-poi-address');
 		$location->address->postal = getValue($poiArray, 'dataset-poi-postal');
@@ -177,7 +187,7 @@ function renderGeoJSON($dataset, $template) {
 	$json->dataset = new stdClass();
 	
 	// Metadata fields
-	$json->dataset->id = $template['metadata']['dataset-id'];
+	$json->dataset->id = (string) $template['metadata']['dataset-id'];
 	$json->dataset->updated = $now->format('c');
 	$json->dataset->created = $now->format('c');
 	$json->dataset->lang = $template['metadata']['dataset-lang'];
@@ -204,14 +214,21 @@ function renderGeoJSON($dataset, $template) {
 		// Skip first row if set as headers row
 		if (($i == 1) && $skipFirstRow) continue;
 		$poiObj = new StdClass();
-		$poiObj->id = getValue($poiArray, 'dataset-poi-id');
+		$poiObj->id = (string) getValue($poiArray, 'dataset-poi-id');
 		// Set incremental id if no defined id in the dataset (required by apps)
 		//if (empty($poiObj->id)) { $poiObj->id = $i + 1; }
-		if (empty($poiObj->id)) { $poiObj->id = $i; }
+		if (empty($poiObj->id)) { $poiObj->id = (string) $i; }
 		$poiObj->title = getValue($poiArray, 'dataset-poi-title');
 		$poiObj->description = getValue($poiArray, 'dataset-poi-description');
 		if ($poiObj->description == null) {
 			$poiObj->description = "";
+		}
+		// Allow to add all available data into a single field
+		if ($template['mapping']['dataset-poi-description'] == 'all') {
+			$poiObj->description = '';
+			foreach($array_mapping as $key => $name) {
+				if (!empty($poiArray[$key])) $poiObj->description .= '<strong>' . $name . '&nbsp;:</strong> ' . $poiArray[$key] . '<br />';
+			}
 		}
 		$poiObj->category = explode(',', getValue($poiArray, 'dataset-poi-category'));
 		array_walk($poiObj->category, create_function('&$val', '$val = trim($val);'));
@@ -230,6 +247,8 @@ function renderGeoJSON($dataset, $template) {
 		} else {
 			$location->point->pos->posList = trim(getValue($poiArray, 'dataset-poi-lat')) . ' ' . trim(getValue($poiArray, 'dataset-poi-long'));
 		}
+		// Invalid coordinates break the file validity, so forget about them !
+		if ($location->point->pos->posList == " ") { continue; }
 		$location->address = new StdClass();
 		$location->address->value = getValue($poiArray, 'dataset-poi-address');
 		$location->address->postal = getValue($poiArray, 'dataset-poi-postal');
@@ -261,10 +280,10 @@ function renderGeoJSON($dataset, $template) {
 		if (($i == 1) && $skipFirstRow) continue;
 		$poiObj = new StdClass();
 		$poiObj->type = "Feature";
-		$poiObj->id = getValue($poiArray, 'dataset-poi-id');
+		$poiObj->id = (string) getValue($poiArray, 'dataset-poi-id');
 		// Set incremental id if no defined id in the dataset (required by apps)
 		//if (empty($poiObj->id)) { $poiObj->id = $i + 1; }
-		if (empty($poiObj->id)) { $poiObj->id = $i; }
+		if (empty($poiObj->id)) { $poiObj->id = (string) $i; }
 		// Build Feature properties
 		$poiObj->properties = new StdClass();
 		$poiObj->properties->title = getValue($poiArray, 'dataset-poi-title');
@@ -472,7 +491,7 @@ function getGeoJSONDataset($geojson) {
 					// Add POI data
 					foreach($keys as $key) {
 						if (in_array($key, array('longitude', 'latitude'))) continue;
-						$poi[] = $element->properties->$key;
+						$poi[] = (string) $element->properties->$key;
 					}
 					$result[] = $poi;
 					//echo print_r($poi, true) . '<hr />';
@@ -495,14 +514,16 @@ function getGeoJSONDataset($geojson) {
 // Note that OSM JSON data can be exported directly by Overpass API
 function getOsmJSONDataset($osmjson) {
 	$result = array();
+	//$main_keys = array('id', 'longitude', 'latitude');
 	$main_keys = array('id', 'longitude', 'latitude');
 	$title_keys = $main_keys;
 	if ($osmjson) {
 		
 		// Build label keys first
 		foreach($osmjson->elements as $element) {
+			if ($element->type != "node") continue;
 			foreach($element->tags as $key => $tag) {
-				if (!in_array($key, $title_keys)) $title_keys[] = $key;
+				if (!in_array($key, $title_keys)) $title_keys[] = (string) $key;
 			}
 		}
 		$result[] = $title_keys;
@@ -510,11 +531,14 @@ function getOsmJSONDataset($osmjson) {
 		// Build properties keys and use them as we would with "first CSV line"
 		//echo print_r($keys, true) . '<hr />';
 		foreach($osmjson->elements as $element) {
-			$poi = array($element->id, $element->lon, $element->lat);
-			// Add POI data
+			// We currently only accept nodes (= POI), and not way, etc.
+			if ($element->type != "node") continue;
+			$poi = array((string) $element->id, (string) $element->lon, (string) $element->lat);
+			//echo "TEST $element->id, (string) $element->lon, (string) $element->lat<br />";
+			// Add POI data - like in csv so use always the same order
 			foreach($title_keys as $key) {
 				if (in_array($key, $main_keys)) continue;
-				$poi[] = $element->tags->{$key};
+				$poi[] = (string) $element->tags->{$key};
 			}
 			$result[] = $poi;
 			//echo print_r($poi, true) . '<hr />';
