@@ -81,7 +81,7 @@ function renderJSON($dataset, $template) {
 	$json->dataset = new stdClass();
 	
 	// Metadata fields
-	$json->dataset->id = $template['metadata']['dataset-id'];
+	$json->dataset->id = (string) $template['metadata']['dataset-id'];
 	$json->dataset->updated = $now->format('c');
 	$json->dataset->created = $now->format('c');
 	$json->dataset->lang = $template['metadata']['dataset-lang'];
@@ -112,14 +112,22 @@ function renderJSON($dataset, $template) {
 		// Skip first row if set as headers row
 		if (($i == 1) && $skipFirstRow) continue;
 		$poiObj = new StdClass();
-		$poiObj->id = getValue($poiArray, 'dataset-poi-id');
+		$poiObj->id = (string) getValue($poiArray, 'dataset-poi-id');
 		// Set incremental id if no defined id in the dataset (required by apps)
 		//if (empty($poiObj->id)) { $poiObj->id = $i + 1; }
-		if (empty($poiObj->id)) { $poiObj->id = $i; }
+		if (empty($poiObj->id)) { $poiObj->id = (string) $i; }
 		$poiObj->title = getValue($poiArray, 'dataset-poi-title');
 		$poiObj->description = getValue($poiArray, 'dataset-poi-description');
 		if ($poiObj->description == null) {
 			$poiObj->description = "";
+		}
+		// Allow to add all available data into a single field
+		if ($template['mapping']['dataset-poi-description'] == 'all') {
+			$poiObj->description = '';
+			//echo print_r($array_mapping, true); exit;
+			foreach($array_mapping as $name => $key) {
+				if (!empty($poiArray[$key])) $poiObj->description .= '<strong>' . $name . '&nbsp;:</strong> ' . $poiArray[$key] . '<br />';
+			}
 		}
 		$poiObj->category = explode(',', getValue($poiArray, 'dataset-poi-category'));
 		array_walk($poiObj->category, create_function('&$val', '$val = trim($val);'));
@@ -138,6 +146,8 @@ function renderJSON($dataset, $template) {
 		} else {
 			$location->point->pos->posList = trim(getValue($poiArray, 'dataset-poi-lat')) . ' ' . trim(getValue($poiArray, 'dataset-poi-long'));
 		}
+		// Invalid coordinates break the file validity, so forget about them !
+		if ($location->point->pos->posList == " ") { continue; }
 		$location->address = new StdClass();
 		$location->address->value = getValue($poiArray, 'dataset-poi-address');
 		$location->address->postal = getValue($poiArray, 'dataset-poi-postal');
@@ -177,7 +187,7 @@ function renderGeoJSON($dataset, $template) {
 	$json->dataset = new stdClass();
 	
 	// Metadata fields
-	$json->dataset->id = $template['metadata']['dataset-id'];
+	$json->dataset->id = (string) $template['metadata']['dataset-id'];
 	$json->dataset->updated = $now->format('c');
 	$json->dataset->created = $now->format('c');
 	$json->dataset->lang = $template['metadata']['dataset-lang'];
@@ -204,14 +214,21 @@ function renderGeoJSON($dataset, $template) {
 		// Skip first row if set as headers row
 		if (($i == 1) && $skipFirstRow) continue;
 		$poiObj = new StdClass();
-		$poiObj->id = getValue($poiArray, 'dataset-poi-id');
+		$poiObj->id = (string) getValue($poiArray, 'dataset-poi-id');
 		// Set incremental id if no defined id in the dataset (required by apps)
 		//if (empty($poiObj->id)) { $poiObj->id = $i + 1; }
-		if (empty($poiObj->id)) { $poiObj->id = $i; }
+		if (empty($poiObj->id)) { $poiObj->id = (string) $i; }
 		$poiObj->title = getValue($poiArray, 'dataset-poi-title');
 		$poiObj->description = getValue($poiArray, 'dataset-poi-description');
 		if ($poiObj->description == null) {
 			$poiObj->description = "";
+		}
+		// Allow to add all available data into a single field
+		if ($template['mapping']['dataset-poi-description'] == 'all') {
+			$poiObj->description = '';
+			foreach($array_mapping as $key => $name) {
+				if (!empty($poiArray[$key])) $poiObj->description .= '<strong>' . $name . '&nbsp;:</strong> ' . $poiArray[$key] . '<br />';
+			}
 		}
 		$poiObj->category = explode(',', getValue($poiArray, 'dataset-poi-category'));
 		array_walk($poiObj->category, create_function('&$val', '$val = trim($val);'));
@@ -230,6 +247,8 @@ function renderGeoJSON($dataset, $template) {
 		} else {
 			$location->point->pos->posList = trim(getValue($poiArray, 'dataset-poi-lat')) . ' ' . trim(getValue($poiArray, 'dataset-poi-long'));
 		}
+		// Invalid coordinates break the file validity, so forget about them !
+		if ($location->point->pos->posList == " ") { continue; }
 		$location->address = new StdClass();
 		$location->address->value = getValue($poiArray, 'dataset-poi-address');
 		$location->address->postal = getValue($poiArray, 'dataset-poi-postal');
@@ -261,10 +280,10 @@ function renderGeoJSON($dataset, $template) {
 		if (($i == 1) && $skipFirstRow) continue;
 		$poiObj = new StdClass();
 		$poiObj->type = "Feature";
-		$poiObj->id = getValue($poiArray, 'dataset-poi-id');
+		$poiObj->id = (string) getValue($poiArray, 'dataset-poi-id');
 		// Set incremental id if no defined id in the dataset (required by apps)
 		//if (empty($poiObj->id)) { $poiObj->id = $i + 1; }
-		if (empty($poiObj->id)) { $poiObj->id = $i; }
+		if (empty($poiObj->id)) { $poiObj->id = (string) $i; }
 		// Build Feature properties
 		$poiObj->properties = new StdClass();
 		$poiObj->properties->title = getValue($poiArray, 'dataset-poi-title');
@@ -391,30 +410,68 @@ function remove_utf8_bom($text) {
 	return $text;
 }
 
+/* Gets a file from an URL */
+function converter_get_file($url) {
+	// File retrieval can fail on timeout or redirects, so make it more failsafe
+	$context = stream_context_create(array('http' => array('max_redirects' => 5, 'timeout' => 60)));
+	// using timestamp and URL hash for quick retrieval based on time and URL source unicity
+	return file_get_contents($url, false, $context);
+}
+
+
 // Get the geoJSON dataset
 function getGeoJSON($dataset) {
 	$result = array();
-	// File retrieval can fail on timeout or redirects, so make it more failsafe
-	//$geojson = file_get_contents($dataset);
-	$context = stream_context_create(array(
-			'http' => array(
-				'max_redirects' => 5,
-				'timeout' => 60,
-			)
-		));
-	// @TODO : we should store files at least for a few minutes or hours in a tmp/folder, 
-	// using timestamp and URL hash for quick retrieval based on time and URL source unicity
-	$geojson = file_get_contents($dataset, false, $context);
-	$geojson = utf8_encode($geojson);
+	$file_content = converter_get_cached_file($dataset);
+	
+	// Give a try
+	$json_obj = json_decode($file_content);
+	if (!is_null($json_obj)) return $json_obj;
+	
+	// If not good yet, try to do some sanitize
+	$geojson = utf8_encode($file_content);
 	$geojson = str_replace(array("\n","\r"),"",$geojson); 
 	$geojson = preg_replace('/([{,]+)(\s*)([^"]+?)\s*:/','$1"$3":',$geojson); 
 	$geojson = preg_replace('/(,)\s*}$/','}',$geojson);
 	$geojson = remove_utf8_bom($geojson);
 	$geojson = preg_replace_callback('/([\x{0000}-\x{0008}]|[\x{000b}-\x{000c}]|[\x{000E}-\x{001F}])/u', function($sub_match){return '\u00' . dechex(ord($sub_match[1]));},$geojson);
-	$geojson = json_decode($geojson);
-	//echo print_r($geojson, true); // debug
-	return $geojson;
-}
+	//echo $geojson . '<hr />';
+	
+	// This will remove unwanted characters.
+	// Check http://www.php.net/chr for details
+	for ($i = 0; $i <= 31; ++$i) { 
+		$geojson = str_replace(chr($i), "", $geojson); 
+	}
+	$geojson = str_replace(chr(127), "", $geojson);
+	// This is the most common part
+	// Some file begins with 'efbbbf' to mark the beginning of the file. (binary level)
+	// here we detect it and we remove it, basically it's the first 3 characters 
+	if (0 === strpos(bin2hex($geojson), 'efbbbf')) { $geojson = substr($geojson, 3); }
+	
+	//$geojson = json_decode($geojson, false, 512, JSON_BIGINT_AS_STRING);
+	$json_obj = json_decode($geojson, false, 512);
+	
+	if ($json_obj === null) {
+		echo json_last_error();
+		// Définie les erreurs
+		$constants = get_defined_constants(true);
+		$json_errors = array();
+		foreach ($constants["json"] as $name => $value) {
+			if (!strncmp($name, "JSON_ERROR_", 11)) {
+				$json_errors[$value] = $name;
+			}
+		}
+		error_log('Dernière erreur : ' . $json_errors[json_last_error()]);
+		// Affiche les erreurs pour les différentes profondeurs.
+		foreach (range(12, 1, -1) as $depth) {
+			var_dump(json_decode($geojson, true, $depth));
+			error_log('Niveau ' . $depth . ' : erreur : ' . $json_errors[json_last_error()]);
+		}
+	}
+	
+		//echo print_r($json_obj, true); // debug
+		return $json_obj;
+	}
 
 // Transform the geoJSON dataset into an array : one array entry per "row" == POI
 // The first row should be the dataset column labels (for easier mapping)
@@ -434,7 +491,7 @@ function getGeoJSONDataset($geojson) {
 					// Add POI data
 					foreach($keys as $key) {
 						if (in_array($key, array('longitude', 'latitude'))) continue;
-						$poi[] = $element->properties->$key;
+						$poi[] = (string) $element->properties->$key;
 					}
 					$result[] = $poi;
 					//echo print_r($poi, true) . '<hr />';
@@ -457,14 +514,16 @@ function getGeoJSONDataset($geojson) {
 // Note that OSM JSON data can be exported directly by Overpass API
 function getOsmJSONDataset($osmjson) {
 	$result = array();
+	//$main_keys = array('id', 'longitude', 'latitude');
 	$main_keys = array('id', 'longitude', 'latitude');
 	$title_keys = $main_keys;
 	if ($osmjson) {
 		
 		// Build label keys first
 		foreach($osmjson->elements as $element) {
+			if ($element->type != "node") continue;
 			foreach($element->tags as $key => $tag) {
-				if (!in_array($key, $title_keys)) $title_keys[] = $key;
+				if (!in_array($key, $title_keys)) $title_keys[] = (string) $key;
 			}
 		}
 		$result[] = $title_keys;
@@ -472,11 +531,14 @@ function getOsmJSONDataset($osmjson) {
 		// Build properties keys and use them as we would with "first CSV line"
 		//echo print_r($keys, true) . '<hr />';
 		foreach($osmjson->elements as $element) {
-			$poi = array($element->id, $element->lon, $element->lat);
-			// Add POI data
+			// We currently only accept nodes (= POI), and not way, etc.
+			if ($element->type != "node") continue;
+			$poi = array((string) $element->id, (string) $element->lon, (string) $element->lat);
+			//echo "TEST $element->id, (string) $element->lon, (string) $element->lat<br />";
+			// Add POI data - like in csv so use always the same order
 			foreach($title_keys as $key) {
 				if (in_array($key, $main_keys)) continue;
-				$poi[] = $element->tags->$key;
+				$poi[] = (string) $element->tags->{$key};
 			}
 			$result[] = $poi;
 			//echo print_r($poi, true) . '<hr />';
@@ -561,5 +623,31 @@ function converter_write_file($target_file = "", $content = '') {
 	}
 	return false;
 }
+
+
+/* Returns a (locally) cached file, or get the file from its live source if not recent enough
+ * $url : source URL to be fetched
+ * $range = date string mask to be used for caching updates, or false to force update
+   eg. 'Ymd' for daily update, YmdHis for every second...
+ */
+function converter_get_cached_file($url = '', $range = 'Ymd') {
+	// Return file is no cache wanted
+	if (!$range) { return converter_get_file($url); }
+	// Use cache : get the cached file, or retrieve and cache it
+	if ($range) {
+		// Use date first so we can rotate it if needed...
+		$cached_filename = dirname(__FILE__) . '/cache/' . date($range) . '_' . md5($url);
+		// Return cached file
+		if (file_exists($cached_filename)) { return converter_get_file($cached_filename); }
+		// Or create a new one
+		$file_content = converter_get_file($url);
+		converter_write_file($cached_filename, $file_content);
+		return $file_content;
+	}
+	// Should not get there...
+	return false;
+}
+
+
 
 
