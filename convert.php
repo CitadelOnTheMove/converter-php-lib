@@ -20,7 +20,8 @@ global $template;
 $remote_template = get_input('remote_template');
 $serialized_template = get_input('serialized_template');
 if (!empty($remote_template)) {
-	$template = file_get_contents($remote_template);
+	$context = stream_context_create(array('http' => array('max_redirects' => 5, 'timeout' => 60)));
+	$template = file_get_contents($remote_template, false, $context);
 	if ($template !== false) $template = unserialize(base64_decode($template));
 	else error_log("Converter : error = could not get template $remote_template");
 } else if (!empty($serialized_template)) {
@@ -86,7 +87,13 @@ switch($import_format) {
 	case 'geojson':
 		$geojson = getGeoJSON($source);
 		$csvdata = getGeoJSONDataset($geojson);
-		//echo '<pre>' . print_r($csvdata, true) . '</pre>'; exit;
+		//echo '<pre>geoJSOn : ' . print_r($csvdata, true) . '</pre>'; exit;
+		break;
+	case 'osmjson':
+		$osmjson = getGeoJSON($source);
+		//echo $source . '<pre>osmJSON source : ' . print_r($osmjson, true) . '</pre>';
+		$csvdata = getOsmJSONDataset($osmjson);
+		//echo $source . '<pre>osmJSON : ' . print_r($csvdata, true) . '</pre>'; exit;
 		break;
 	default:
 		$csvdata = getCSVDataset($source, $template['delimiter'], $template['enclosure'], $template['escape']);

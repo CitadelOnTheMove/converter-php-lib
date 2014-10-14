@@ -1,6 +1,7 @@
 <?php
 include_once "citadel-converter-lib.php";
 $action = get_input('action', '');
+$load_template = get_input('load_template', false);
 
 
 
@@ -8,33 +9,67 @@ $action = get_input('action', '');
 // Liste des paramètres
 //$params_options = array('skip-first-row', 'delimiter', 'enclosure', 'escape');
 
-
-$skip_first_row = get_input('skip-first-row', 'yes');
-if ($skip_first_row == 'yes') $skip_first_row = true; else $skip_first_row = false;
-$delimiter = get_input('delimiter', ';');
-$enclosure = get_input('enclosure', '"');
-$escape = get_input('escape', '\\');
-$dataset_id = get_input('dataset_id', '');
-$dataset_lang = get_input('dataset_lang', 'fr_FR');
-$dataset_author_id = get_input('dataset_author_id', '');
-$dataset_author_name = get_input('dataset_author_name', '');
-$dataset_license_url = get_input('dataset_license_url', '');
-$dataset_license_term = get_input('dataset_license_term', 'CC-BY');
-$dataset_source_url = get_input('dataset_source_url', '');
-$dataset_source_term = get_input('dataset_source_term', 'source');
-$dataset_update_frequency = get_input('dataset_update_frequency', 'semester');
-// Mapping
-$dataset_poi_category_default = get_input('dataset_poi_category_default', '');
-$dataset_poi_id = get_input('dataset_poi_id', '');
-$dataset_poi_title = get_input('dataset_poi_title', 'Titre');
-$dataset_poi_description = get_input('dataset_poi_description', 'Description');
-$dataset_poi_category = get_input('dataset_poi_category', 'Catégorie1');
-$dataset_poi_lat = get_input('dataset_poi_lat', 'Latitude');
-$dataset_poi_long = get_input('dataset_poi_long', 'Longitude');
-$dataset_coordinate_system = get_input('dataset_coordinate_system', 'WGS84');
-$dataset_poi_address = get_input('dataset_poi_address', 'Adresse');
-$dataset_poi_postal = get_input('dataset_poi_postal', 'Codepostal');
-$dataset_poi_city = get_input('dataset_poi_city', 'Ville');
+if (!empty($load_template)) {
+	//echo "Loading existing template...<br />";
+	// Load_existing template;
+	$template = unserialize(base64_decode(trim($load_template)));
+	
+	//echo '<pre>' . print_r($template, true) . '</pre>';
+	$skip_first_row = $template['skip-first-row'];
+	$delimiter = $template['delimiter'];
+	$enclosure = $template['enclosure'];
+	$escape = $template['escape'];
+	$dataset_id = $template['metadata']['dataset-id'];
+	$dataset_lang = $template['metadata']['dataset-lang'];
+	$dataset_author_id = $template['metadata']['dataset-author-id'];
+	$dataset_author_name = $template['metadata']['dataset-author-name'];
+	$dataset_license_url = $template['metadata']['dataset-license-url'];
+	$dataset_license_term = $template['metadata']['dataset-license-term'];
+	$dataset_source_url = $template['metadata']['dataset-source-url'];
+	$dataset_source_term = $template['metadata']['dataset-source-term'];
+	$dataset_update_frequency = $template['metadata']['dataset-update-frequency'];
+	// Mapping
+	$dataset_poi_category_default = $template['mapping']['dataset-poi-category-default'];
+	$dataset_poi_id = $template['mapping']['dataset-poi-id'];
+	$dataset_poi_title = $template['mapping']['dataset-poi-title'];
+	$dataset_poi_description = $template['mapping']['dataset-poi-description'];
+	$dataset_poi_category = $template['mapping']['dataset-poi-category'];
+	$dataset_poi_lat = $template['mapping']['dataset-poi-lat'];
+	$dataset_poi_long = $template['mapping']['dataset-poi-long'];
+	$dataset_coordinate_system = $template['mapping']['dataset-coordinate-system'];
+	$dataset_poi_address = $template['mapping']['dataset-poi-address'];
+	$dataset_poi_postal = $template['mapping']['dataset-poi-postal'];
+	$dataset_poi_city = $template['mapping']['dataset-poi-city'];
+	//echo "License : $dataset_license_url";
+	
+} else {
+	$skip_first_row = get_input('skip-first-row', 'yes');
+	if ($skip_first_row == 'yes') $skip_first_row = true; else $skip_first_row = false;
+	$delimiter = get_input('delimiter', ';');
+	$enclosure = get_input('enclosure', '"');
+	$escape = get_input('escape', '\\');
+	$dataset_id = get_input('dataset_id', '');
+	$dataset_lang = get_input('dataset_lang', 'fr_FR');
+	$dataset_author_id = get_input('dataset_author_id', '');
+	$dataset_author_name = get_input('dataset_author_name', '');
+	$dataset_license_url = get_input('dataset_license_url', '');
+	$dataset_license_term = get_input('dataset_license_term', 'CC-BY');
+	$dataset_source_url = get_input('dataset_source_url', '');
+	$dataset_source_term = get_input('dataset_source_term', 'source');
+	$dataset_update_frequency = get_input('dataset_update_frequency', 'semester');
+	// Mapping
+	$dataset_poi_category_default = get_input('dataset_poi_category_default', '');
+	$dataset_poi_id = get_input('dataset_poi_id', '');
+	$dataset_poi_title = get_input('dataset_poi_title', 'Titre');
+	$dataset_poi_description = get_input('dataset_poi_description', 'Description');
+	$dataset_poi_category = get_input('dataset_poi_category', 'Catégorie1');
+	$dataset_poi_lat = get_input('dataset_poi_lat', 'Latitude');
+	$dataset_poi_long = get_input('dataset_poi_long', 'Longitude');
+	$dataset_coordinate_system = get_input('dataset_coordinate_system', 'WGS84');
+	$dataset_poi_address = get_input('dataset_poi_address', 'Adresse');
+	$dataset_poi_postal = get_input('dataset_poi_postal', 'Codepostal');
+	$dataset_poi_city = get_input('dataset_poi_city', 'Ville');
+}
 
 
 
@@ -195,6 +230,13 @@ if (in_array($action, array('generate', 'export'))) {
 				</label></p>
 				<p><input type="submit" value="<?php echo echo_lang('converter:tplgen:submit'); ?>" /></p>
 			</form>
+			
+			<h2><?php echo echo_lang('converter:tplgen:legend:import'); ?></h2>
+			<form method="POST">
+				<p><label><?php echo echo_lang('converter:tplgen:import'); ?> <textarea name="load_template" style="width:100%; height:20ex;"></textarea></label></p>
+				<p><input type="submit" value="<?php echo echo_lang('converter:tplgen:submit'); ?>" /></p>
+			</form>
+			
 		</div>
 	</body>
 </html>

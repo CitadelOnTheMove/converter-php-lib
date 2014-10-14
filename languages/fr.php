@@ -44,7 +44,7 @@ $language = array(
 	'converter:tplgen:title' => "Générateur de modèle de conversion",
 	'converter:tplgen:description' => "<p>Ce formulaire permet de créer des modèles de conversion utilisables directement par le convertisseur.</p>
 			<p>Un modèle de conversion consiste en un tableau PHP sérialisé, c'est-à-dire un simple fichier texte qui peut être stocké en ligne, ou envoyé au convertisseur via un formulaire.</p>
-			<p>Cet outil simplifie la création de ces fichiers.</p>",
+			<p>Cet outil simplifie la création et la modification de ces fichiers.</p>",
 	'converter:tplgen:output' => "Modèle de conversion généré",
 	'converter:tplgen:form' => "Créer / modifier le modèle de conversion",
 	'converter:tplgen:legend:technical' => "Informations techniques",
@@ -83,6 +83,8 @@ $language = array(
 	'converter:tplgen:action:generate' => "Générer le template et continuer à éditer",
 	'converter:tplgen:action:export' => "Exporter le modèle (le formulaire va disparaître)",
 	
+	'converter:tplgen:legend:import' => "OU Importer et modifier un modèle existant",
+	'converter:tplgen:import' => "Contenu du modèle",
 	
 );
 

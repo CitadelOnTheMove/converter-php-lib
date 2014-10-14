@@ -51,10 +51,22 @@ $base_url = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['S
 				<fieldset>
 					<legend><?php echo echo_lang('converter:form'); ?></legend>
 					<div style="width:45%; float:left;">
+						
 						<p><label><?php echo echo_lang('converter:form:source'); ?><input type="text" name="source" value="<?php echo $source; ?>" /></label></p>
+						
 						<p><label><?php echo echo_lang('converter:form:filename'); ?><input type="text" name="filename" value="<?php echo $filename; ?>" /></label></p>
-						<p><label><?php echo echo_lang('converter:form:format'); ?><select name="format" value="<?php echo $format; ?>"><option value="citadel" <?php if ($format == 'citadel') echo 'selected="selected"'; ?>>Citadel JSON</option><option value="geojson" <?php if ($format == 'geojson') echo 'selected="selected"'; ?>>geoJSON</option></select></p>
-						<p><label><?php echo echo_lang('converter:form:import'); ?><select name="import" value="<?php echo $import_format; ?>"><option value="csv" <?php if ($format == 'csv') echo 'selected="selected"'; ?>>CSV</option><option value="geojson" <?php if ($format == 'geojson') echo 'selected="selected"'; ?>>geoJSON</option></select></p>
+						
+						<p><label><?php echo echo_lang('converter:form:import'); ?><select name="import" value="<?php echo $import_format; ?>">
+								<option value="csv" <?php if ($import_format == 'csv') echo 'selected="selected"'; ?>>CSV</option>
+								<option value="geojson" <?php if ($import_format == 'geojson') echo 'selected="selected"'; ?>>geoJSON</option>
+								<option value="osmjson" <?php if ($import_format == 'osmjson') echo 'selected="selected"'; ?>>OSM JSON</option>
+							</select></p>
+						
+						<p><label><?php echo echo_lang('converter:form:format'); ?><select name="format" value="<?php echo $format; ?>">
+								<option value="citadel" <?php if ($format == 'citadel') echo 'selected="selected"'; ?>>Citadel JSON</option>
+								<option value="geojson" <?php if ($format == 'geojson') echo 'selected="selected"'; ?>>geoJSON</option>
+							</select></p>
+						
 					</div>
 					<div style="width:45%; float:right;">
 						<p><label><?php echo echo_lang('converter:form:template'); ?><input type="text" name="remote_template" value="<?php echo $remote_template; ?>" /></label></p>
