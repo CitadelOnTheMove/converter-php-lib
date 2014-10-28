@@ -15,6 +15,8 @@ if (!empty($short)) {
 	if (empty($format)) $format = 'csv';
 	$import_format = $params['import'];
 	if (empty($import_format)) $import_format = 'csv';
+	$remote_template = $params['remote_template'];
+	$serialized_template = $params['serialized_template'];
 } else {
 // Get direct input parameters
 	// Source file : any local or remote file
@@ -27,17 +29,17 @@ if (!empty($short)) {
 	$format = get_input('format', 'citadel');
 	// Import format : default to CSV but allows to use geoJSON
 	$import_format = get_input('import', 'csv');
+	// Mapping template : any local or remote template config
+	$remote_template = get_input('remote_template');
+	$serialized_template = get_input('serialized_template');
 }
 // Set defaults
 if (empty($source)) $source = 'samples/dataset.csv';
 if (empty($filename)) { $filename = 'export_' . date('YmdHis'); }
 
 
-// Mapping template : any local or remote template config
 global $template;
 // Allow to fetch a serialized array structure from remote source
-$remote_template = get_input('remote_template');
-$serialized_template = get_input('serialized_template');
 if (!empty($remote_template)) {
 	$context = stream_context_create(array('http' => array('max_redirects' => 5, 'timeout' => 60)));
 	$template = file_get_contents($remote_template, false, $context);
