@@ -35,10 +35,15 @@ $base_url = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['S
 			$serialized_template = get_input('serialized_template');
 			if (!empty($source)) {
 				$download_url = $base_url . 'convert.php?source=' . urlencode($source) . '&filename=' . urlencode($filename) . '&remote_template=' . urlencode($remote_template) . '&serialized_template=' . urlencode($serialized_template) . '&format=' . urlencode($format) . '&import=' . urlencode($import_format);
+				$download_shorturl_name = dirname(__FILE__) . '/urldata/' . md5($download_url);
+				$download_shorturl = $base_url . 'convert.php?u=' . md5($download_url);
+				if (!file_exists($download_shorturl_name)) converter_write_file($download_shorturl_name, $download_url);
+				//converter_get_file($url)
 				?>
 				<blockquote>
 					<p><a href="<?php echo $download_url; ?>"><?php echo $CONFIG['language']['converter:download:file']; ?></a></p>
 					<p><?php echo echo_lang('converter:download:link'); ?><br /><pre><?php echo $download_url; ?></pre></p>
+					<p><?php echo echo_lang('converter:download:shortlink'); ?><br /><pre><a href="<?php echo $download_shorturl; ?>"><?php echo $download_shorturl; ?></a></pre></p>
 				</blockquote><br />
 				<?php
 			}
