@@ -31,6 +31,7 @@ $language = array(
 			<p>Le formulaire suivant vous permet de fabriquer l'URL de téléchargement du fichier converti, à partir du fichier source et du modèle de conversion. Vous pouvez l'utiliser pour récupérer le fichier converti, ou pour fournir directement cette URL à votre application pour qu'elle dispose de données à jour.</p>",
 	'converter:download:file' => "Télécharger le fichier Citadel-JSON généré",
 	'converter:download:link' => "OU utilisez ce lien direct dans votre application : ",
+	'converter:download:shortlink' => "OR utilisez ce lien plus court : ",
 	'converter:form' => "Configurez pour récupérer le fichier converti",
 	'converter:form:source' => "Fichier source (fichier local ou URL) : ",
 	'converter:form:template' => "Fichier du modèle de conversion : ",

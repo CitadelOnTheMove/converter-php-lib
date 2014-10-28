@@ -22,6 +22,12 @@ if (!include_once("languages/$lang.php")) { include_once("languages/en.php"); }
 $CONFIG['language'] = $language;
 
 
+// Init : create required dirs if they do not exist
+if (!file_exists(dirname(__FILE__) . '/samples/')) { mkdir(dirname(__FILE__) . '/samples/', 0777, true); }
+if (!file_exists(dirname(__FILE__) . '/cache/')) { mkdir(dirname(__FILE__) . '/cache/', 0777, true); }
+if (!file_exists(dirname(__FILE__) . '/urldata/')) { mkdir(dirname(__FILE__) . '/urldata/', 0777, true); }
+
+
 function add_lang_switch($lang = 'en', $lang_list = array('en', 'fr')) {
 	$return = '';
 	foreach ($lang_list as $l) {

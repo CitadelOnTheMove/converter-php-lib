@@ -1,18 +1,37 @@
 <?php
 include_once "citadel-converter-lib.php";
+$base_url = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['SERVER_NAME'] . dirname($_SERVER['PHP_SELF']) . '/';
 
-// Source file : any local or remote file
-$source = get_input('source');
+$short = get_input('u');
+if (!empty($short)) {
+	// Analyse provided short URL to extract query parameters
+	$short = $base_url . 'urldata/' . $short;
+	$query_url = converter_get_file($short);
+	$query = parse_url($query_url, PHP_URL_QUERY);
+	parse_str($query, $params);
+	$source = $params['source'];
+	$filename = $params['filename'];
+	$format = $params['format'];
+	if (empty($format)) $format = 'csv';
+	$import_format = $params['import'];
+	if (empty($import_format)) $import_format = 'csv';
+} else {
+// Get direct input parameters
+	// Source file : any local or remote file
+	$source = get_input('source');
+
+	// Export filename - we could use some templating such as DATE to add a date...
+	$filename = get_input('filename');
+
+	// Export format : default to Citadel JSON but allows to export Citadel-enriched geoJSON
+	$format = get_input('format', 'citadel');
+	// Import format : default to CSV but allows to use geoJSON
+	$import_format = get_input('import', 'csv');
+}
+// Set defaults
 if (empty($source)) $source = 'samples/dataset.csv';
-
-// Export filename - we could use some templating such as DATE to add a date...
-$filename = get_input('filename');
 if (empty($filename)) { $filename = 'export_' . date('YmdHis'); }
 
-// Export format : default to Citadel JSON but allows to export Citadel-enriched geoJSON
-$format = get_input('format', 'citadel');
-// Import format : default to CSV but allows to use geoJSON
-$import_format = get_input('import', 'csv');
 
 // Mapping template : any local or remote template config
 global $template;

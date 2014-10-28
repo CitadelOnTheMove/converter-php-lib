@@ -31,6 +31,7 @@ $language = array(
 			<p>The following form will generate an URL that can be used to get the converted file, or directly into your application to provide it with a live data source.</p>",
 	'converter:download:file' => "Download generated Citadel-JSON file",
 	'converter:download:link' => "OR use this direct URL into your app: ",
+	'converter:download:shortlink' => "OR use this shorter URL: ",
 	'converter:form' => "Configure to get the converted file",
 	'converter:form:source' => "Source file (local file or URL): ",
 	'converter:form:template' => "Template file: ",
