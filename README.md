@@ -4,14 +4,17 @@ Citadel PHP Converter lib
 Citadel PHP converter lib aims to facilitate the use of the Citadel-JSON format by providing the basic PHP structure that allows :
 * Using it as an on-the-fly CSV to Citadel-JSON converter for your mobile applications
 * Embedding it into other opensource products, such as CMS or Data stores, to provides natively Citadel-JSON files
+* Also use geoJSON or osmJSON data source formats
+* Enable to export converted data to geoJSON, in addition to Citadel JSON
+* Provide configurable data caching - this feature aims to both reduce access time to converted dataset, by retrieving and converting dataset on a regular basis, but not on every access.
 
-This is rather a developper or tech-friendly tool.
+This tool is designed to be used by developper or tech-friendly people wishing to enable live data sources to Citadel AGT and mobile templates.
 
 
 Description
 ===========
 
-The current library facilitates the conversion of static flat CSV files to Citadel-JSON files that can be used directly into the Citadel mobile application templates.
+The current library facilitates the conversion of static flat CSV files (and also geoJSON and osmJSON) to Citadel-JSON files that can be used directly into the Citadel mobile application templates.
 
 
 Usage
@@ -51,11 +54,9 @@ Roadmap
 This code is only a basis for more advanced projects, so we have a full roadmap and we will appareciate a lot your feedback and suggestions ! Please use the Issues feature to provide your inputs.
 
 The general idea of the roadmap is to 
-* implement the other data fields from the Citadel-JSON format
-* add an editor feature to allow using various fields into the output description field for POI
-* enable live encoding from various datasets
-** add a mapping template editor / facility for easier generation of config files
+* fully implement the data fields from the Citadel-JSON format
+* improve the mapping template editor, and extend the capabilities of config files
 * add some converted data caching (so we update the file only when requested, or depending on some info, whether in the dataset or.. we'll see)
-* enable to plug the library to other data sources than CSV files, and particularly database backends
+* enable to plug the library to more live data sources, and database backends
 
 
